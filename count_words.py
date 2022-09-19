@@ -19,6 +19,7 @@ def count_words(text):
             words_counter[w] = 1
     sorted_words = {k: v for k, v in sorted(words_counter.items(), key=lambda item: item[1], reverse=True)}
     # print(sorted_words)
+    print(f'Total number of detected words: {len(sorted_words)}')
     for w in sorted_words:
         print(w, sorted_words[w])
 
