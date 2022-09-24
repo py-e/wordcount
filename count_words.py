@@ -22,6 +22,7 @@ def count_words(text):
     splitted_text = text.split()
     words_counter = {}
     for w in splitted_text:
+        w = w.lower()
         w = cleanup_word(w)
         if w in words_counter:
             words_counter[w][0] += 1

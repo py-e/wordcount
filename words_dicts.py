@@ -9,7 +9,7 @@ top_100_english_words = {
     'in': [7, 'Preposition'],
     'that': [8, 'Conjunction et al.'],
     'have': [9, 'Verb'],
-    'I': [10, 'Pronoun'],
+    'i': [10, 'Pronoun'],
     'it': [11, 'Pronoun'],
     'for': [12, 'Preposition'],
     'not': [13, 'Adverb et al.'],
