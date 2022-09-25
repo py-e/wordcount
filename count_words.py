@@ -12,10 +12,14 @@ def cleanup_word(word):
 
 
 def print_sorted_by_number(words):
+    print(f'Total number of the words: {sum(words[w][0] for w in words)}')
+    print(f'Number of the unique words: {len(words)}')
+
     sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
-    print(f'Total number of detected words: {len(sorted_words)}')
     for w in sorted_words:
-        print(w, sorted_words[w][0], sorted_words[w][1])
+        print(f'{sorted_words[w][0]:<5}', end='')
+        print(f' {w:<10}', end='')
+        print(sorted_words[w][1])
 
 
 def count_words(text):
