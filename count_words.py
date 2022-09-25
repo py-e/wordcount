@@ -23,11 +23,9 @@ def print_sorted_by_number(words):
 
 
 def count_words(text):
-    splitted_text = text.split()
+    text_words = (cleanup_word(w).lower() for w in text.split())
     words_counter = {}
-    for w in splitted_text:
-        w = w.lower()
-        w = cleanup_word(w)
+    for w in text_words:
         if w in words_counter:
             words_counter[w][0] += 1
         else:
