@@ -30,11 +30,10 @@ def print_sorted_by_number(words):
 
 
 def add_to_counter(w, words_counter):
-    if w in words_counter:
-        words_counter[w][0] += 1
-    else:
+    if w not in words_counter:
         word_frequency = TOP100 if w in top_100_english_words else ''
-        words_counter[w] = [1, word_frequency]
+        words_counter[w] = [0, word_frequency]
+    words_counter[w][0] += 1
 
 
 def count_words(text):
