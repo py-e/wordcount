@@ -9,11 +9,29 @@ def insert_text():
     return t
 
 
+def cleanup_beginning(word):
+    """Recursion for more than one symbol, like:
+    '("robots' -> 'robots'."""
+    if not word[0].islower():
+        return cleanup_end(word[1:])
+    else:
+        return word
+
+
+def cleanup_end(word):
+    """Recursion for more than one symbol, like:
+    'robots").' -> 'robots'."""
+    if not word[-1].islower():
+        return cleanup_end(word[:-1])
+    else:
+        return word
+
+
 def cleanup_word(word):
     """Remove first/last symbol if it's not a letter.
     ex.: '(robots' -> 'robots'; 'robots:' -> 'robots'."""
-    word = word[1:] if not word[0].islower() else word
-    word = word[:-1] if not word[-1].islower() else word
+    word = cleanup_beginning(word)
+    word = cleanup_end(word)
     return word
 
 
