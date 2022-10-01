@@ -13,7 +13,7 @@ def cleanup_beginning(word):
     """Recursion for more than one symbol, like:
     '("robots' -> 'robots'."""
     if not word[0].islower():
-        return cleanup_end(word[1:])
+        return cleanup_beginning(word[1:])
     else:
         return word
 
