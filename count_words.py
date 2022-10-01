@@ -1,6 +1,7 @@
-from words_dicts import top_100_english_words
+from words_dicts import top_100_english_words, from100_to1000_basic_words
 
 TOP100 = '(in top 100)'
+TOP1000 = '(in top from 100 to 1000)'
 
 
 def insert_text():
@@ -31,7 +32,12 @@ def print_sorted_by_number(words):
 
 def add_to_counter(w, words_counter):
     if w not in words_counter:
-        word_frequency = TOP100 if w in top_100_english_words else ''
+        if w in top_100_english_words:
+            word_frequency = TOP100
+        elif w in from100_to1000_basic_words:
+            word_frequency = TOP1000
+        else:
+            word_frequency = ''
         words_counter[w] = [0, word_frequency]
     words_counter[w][0] += 1
 
