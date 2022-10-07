@@ -80,6 +80,17 @@ def count_words(text):
     return words_counter, not_words
 
 
+def recount_variants(words, variant_list, variant_type):
+    size = len(variant_type)
+    for v in variant_list:
+        if words[v[:-size]][2]:
+            words[v[:-size]][2] = words[v[:-size]][2][:-1] + f"; {words[v][0]} with {variant_type}: {v})"
+        else:
+            words[v[:-size]][2] = f"({words[v][0]} with {variant_type}: {v})"
+        words[v[:-size]][0] += words[v][0]
+        del words[v]
+
+
 def count_apostrophes(words):
     apostrophes = []
     for w in words:
@@ -88,13 +99,7 @@ def count_apostrophes(words):
                 if w[:-2] in words:
                     apostrophes.append(w)
 
-    for a in apostrophes:
-        if words[a[:-2]][2]:
-            words[a[:-2]][2] = words[a[:-2]][2][:-1] + f"; {words[a][0]} with 's: {a})"
-        else:
-            words[a[:-2]][2] = f"({words[a][0]} with 's: {a})"
-        words[a[:-2]][0] += words[a][0]
-        del words[a]
+    recount_variants(words, apostrophes, "'s")
 
 
 def count_plurals(words):
@@ -106,13 +111,7 @@ def count_plurals(words):
             if w[:-1] in words:
                 plurals.append(w)
 
-    for p in plurals:
-        if words[p[:-1]][2]:
-            words[p[:-1]][2] = words[p[:-1]][2][:-1] + f'; {words[p][0]} with s: {p})'
-        else:
-            words[p[:-1]][2] = f'({words[p][0]} with s: {p})'
-        words[p[:-1]][0] += words[p][0]
-        del words[p]
+    recount_variants(words, plurals, 's')
 
 
 def main():
