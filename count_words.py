@@ -35,6 +35,11 @@ def cleanup_word(word):
     return word
 
 
+def convert_symbols(word):
+    word = word.replace("`", "'").replace("’", "'")
+    return word
+
+
 def print_totals(words):
     print(f'Total number of the words: {sum(words[w][0] for w in words)}')
     print(f'Number of the unique words: {len(words)}')
@@ -44,8 +49,9 @@ def print_sorted_by_number(words):
     sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
     for w in sorted_words:
         print(f'{sorted_words[w][0]:<5}', end='')
-        print(f' {w:<10}', end='')
-        print(sorted_words[w][1])
+        print(f'{w:<10}', end='')
+        print(f' {sorted_words[w][1]:<27}', end='')
+        print(f' {sorted_words[w][2]}')
 
 
 def add_to_counter(w, words_counter):
@@ -56,7 +62,7 @@ def add_to_counter(w, words_counter):
             word_frequency = TOP1000
         else:
             word_frequency = ''
-        words_counter[w] = [0, word_frequency]
+        words_counter[w] = [0, word_frequency, '']
     words_counter[w][0] += 1
 
 
@@ -67,17 +73,56 @@ def count_words(text):
         w = w.lower()
         if w.islower():
             w = cleanup_word(w)
+            w = convert_symbols(w)
             add_to_counter(w, words_counter)
         else:
             not_words.add(w)
     return words_counter, not_words
 
 
+def count_apostrophes(words):
+    apostrophes = []
+    for w in words:
+        if "'" in w:
+            if w[-2:] == "'s":
+                if w[:-2] in words:
+                    apostrophes.append(w)
+
+    for a in apostrophes:
+        if words[a[:-2]][2]:
+            words[a[:-2]][2] = words[a[:-2]][2][:-1] + f"; {words[a][0]} with 's: {a})"
+        else:
+            words[a[:-2]][2] = f"({words[a][0]} with 's: {a})"
+        words[a[:-2]][0] += words[a][0]
+        del words[a]
+
+
+def count_plurals(words):
+    """Actually not only plurals, any words with s at the end
+    (e.g. its, makes)"""
+    plurals = []
+    for w in words:
+        if w[-1] == 's' and len(w) > 2:
+            if w[:-1] in words:
+                plurals.append(w)
+
+    for p in plurals:
+        if words[p[:-1]][2]:
+            words[p[:-1]][2] = words[p[:-1]][2][:-1] + f'; {words[p][0]} with s: {p})'
+        else:
+            words[p[:-1]][2] = f'({words[p][0]} with s: {p})'
+        words[p[:-1]][0] += words[p][0]
+        del words[p]
+
+
 def main():
     words, not_words = count_words(insert_text())
+    count_plurals(words)
+    count_apostrophes(words)
     print_totals(words)
     print_sorted_by_number(words)
-    print(f'Items excluded (not words): {not_words}')
+    if not_words:
+        print(f'Items excluded (not words): {not_words}')
 
 
 if __name__ == '__main__':
