@@ -1,7 +1,16 @@
+import argparse
+
 from words_dicts import top_100_english_words, from100_to1000_basic_words
 
 TOP100 = '(in top 100)'
 TOP1000 = '(in top from 100 to 1000)'
+
+arg_parser = argparse.ArgumentParser(description='Count number of words in a text. '
+                                                 'Detect words from top 100 and top 1000 lists.')
+arg_parser.add_argument('-t100', '--top100_hide', action='store_true', help='do not print top 100 words')
+arg_parser.add_argument('-t1000', '--top1000_hide', action='store_true', help='do not print top 1000 words')
+arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='print words length statistic')
+args = arg_parser.parse_args()
 
 
 def insert_text():
@@ -46,7 +55,20 @@ def print_totals(words):
 
 
 def print_sorted_by_number(words):
-    sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
+    """Print results, sorted descent by frequency.
+    <frequency> <word> <(in top 100/1000)> <variants counted>
+    Handling -t100 (--top100_hide) and -t1000 (--top1000_hide) options."""
+    if args.top1000_hide:
+        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)
+                        if v[1] not in (TOP100, TOP1000)}
+        print(f'Words from Top 1000 list are hidden, {len(sorted_words)} unique words shown below:')
+    elif args.top100_hide:
+        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)
+                        if v[1] != TOP100}
+        print(f'Words from Top 100 list are hidden, {len(sorted_words)} unique words shown below:')
+    else:
+        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
+
     for w in sorted_words:
         print(f'{sorted_words[w][0]:<5}', end='')
         print(f'{w:<10}', end='')
@@ -140,7 +162,8 @@ def main():
     print_sorted_by_number(words)
     if not_words:
         print(f'Items excluded (not words): {not_words}')
-    print_sizes(size_of_words(words))
+    if args.size_of_words:
+        print_sizes(size_of_words(words))
 
 
 if __name__ == '__main__':
