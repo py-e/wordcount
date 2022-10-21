@@ -13,7 +13,7 @@ arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='prin
 args = arg_parser.parse_args()
 
 
-def insert_text():
+def get_text():
     t = input('Provide the text: ')
     return t
 
@@ -54,20 +54,28 @@ def print_totals(words):
     print(f'Number of the unique words: {len(words)}')
 
 
+def sort_and_exclude(words, exclude=None, exc_comment=None):
+    if exclude:
+        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)
+                        if v[1] not in exclude}
+        words_num = len(sorted_words)
+        words_num_str = f', unique words shown below ({words_num}):' if words_num else ''
+        print(f'Words from Top {exc_comment} list are hidden{words_num_str}')
+    else:
+        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
+    return sorted_words
+
+
 def print_sorted_by_number(words):
     """Print results, sorted descent by frequency.
     <frequency> <word> <(in top 100/1000)> <variants counted>
     Handling -t100 (--top100_hide) and -t1000 (--top1000_hide) options."""
     if args.top1000_hide:
-        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)
-                        if v[1] not in (TOP100, TOP1000)}
-        print(f'Words from Top 1000 list are hidden, {len(sorted_words)} unique words shown below:')
+        sorted_words = sort_and_exclude(words, exclude=(TOP100, TOP1000), exc_comment='1000')
     elif args.top100_hide:
-        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)
-                        if v[1] != TOP100}
-        print(f'Words from Top 100 list are hidden, {len(sorted_words)} unique words shown below:')
+        sorted_words = sort_and_exclude(words, exclude=(TOP100,), exc_comment='100')
     else:
-        sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
+        sorted_words = sort_and_exclude(words)
 
     for w in sorted_words:
         print(f'{sorted_words[w][0]:<5}', end='')
@@ -155,7 +163,7 @@ def size_of_words(words):
 
 
 def main():
-    words, not_words = count_words(insert_text())
+    words, not_words = count_words(get_text())
     count_plurals(words)
     count_apostrophes(words)
     print_totals(words)
