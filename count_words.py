@@ -7,6 +7,7 @@ TOP1000 = '(in top from 100 to 1000)'
 
 arg_parser = argparse.ArgumentParser(description='Count number of words in a text. '
                                                  'Detect words from top 100 and top 1000 lists.')
+arg_parser.add_argument('-f', '--file', action='store', type=str, help='path to text file')
 arg_parser.add_argument('-t100', '--top100_hide', action='store_true', help='do not print top 100 words')
 arg_parser.add_argument('-t1000', '--top1000_hide', action='store_true', help='do not print top 1000 words')
 arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='print words length statistic')
@@ -14,7 +15,17 @@ args = arg_parser.parse_args()
 
 
 def get_text():
-    t = input('Provide the text: ')
+    if args.file:
+        user_path = args.file
+        while 1:
+            try:
+                with open(user_path, encoding='utf-8') as f:
+                    t = f.read().replace('\n', ' ')
+                    break
+            except FileNotFoundError:
+                user_path = input(f'File {user_path} cannot be found, please check and provide the path: ')
+    else:
+        t = input('Provide the text: ')
     return t
 
 
@@ -69,7 +80,8 @@ def sort_and_exclude(words, exclude=None, exc_comment=None):
 def print_sorted_by_number(words):
     """Print results, sorted descent by frequency.
     <frequency> <word> <(in top 100/1000)> <variants counted>
-    Handling -t100 (--top100_hide) and -t1000 (--top1000_hide) options."""
+
+    Handling options: -t100 (--top100_hide) and -t1000 (--top1000_hide)."""
     if args.top1000_hide:
         sorted_words = sort_and_exclude(words, exclude=(TOP100, TOP1000), exc_comment='1000')
     elif args.top100_hide:
