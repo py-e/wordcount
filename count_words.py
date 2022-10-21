@@ -77,6 +77,7 @@ def count_words(text):
             add_to_counter(w, words_counter)
         else:
             not_words.add(w)
+
     return words_counter, not_words
 
 
@@ -114,6 +115,23 @@ def count_plurals(words):
     recount_variants(words, plurals, 's')
 
 
+def print_sizes(sizes):
+    print('\nSize of words:')
+    for i in sorted(sizes):
+        print(f'{i}, {sizes[i][1]}: {sizes[i][0]}')
+
+
+def size_of_words(words):
+    sizes = {}
+    for w in words:
+        if len(w) not in sizes:
+            sizes[len(w)] = [[], 0]
+        sizes[len(w)][0].append(w)
+        sizes[len(w)][1] += 1
+
+    return sizes
+
+
 def main():
     words, not_words = count_words(insert_text())
     count_plurals(words)
@@ -122,6 +140,7 @@ def main():
     print_sorted_by_number(words)
     if not_words:
         print(f'Items excluded (not words): {not_words}')
+    print_sizes(size_of_words(words))
 
 
 if __name__ == '__main__':
