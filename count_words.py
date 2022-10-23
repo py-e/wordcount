@@ -74,12 +74,17 @@ def sort_and_exclude(words, exclude=None, exc_comment=None):
         print(f'Words from Top {exc_comment} list are hidden{words_num_str}')
     else:
         sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
+
+    # Add index to the words data structure.
+    # key: word; value: [frequency, list, variants, index]
+    for e, (k, v) in enumerate(sorted_words.items(), 1):
+        v.append(e)
     return sorted_words
 
 
 def print_sorted_by_number(words):
     """Print results, sorted descent by frequency.
-    <frequency> <word> <(in top 100/1000)> <variants counted>
+    <number> <frequency> <word> <(in top 100/1000)> <variants counted>
 
     Handling options: -t100 (--top100_hide) and -t1000 (--top1000_hide)."""
     if args.top1000_hide:
@@ -90,6 +95,7 @@ def print_sorted_by_number(words):
         sorted_words = sort_and_exclude(words)
 
     for w in sorted_words:
+        print(f'{str(sorted_words[w][3])+":":<5}', end='')
         print(f'{sorted_words[w][0]:<5}', end='')
         print(f'{w:<10}', end='')
         print(f' {sorted_words[w][1]:<27}', end='')
@@ -99,12 +105,12 @@ def print_sorted_by_number(words):
 def add_to_counter(w, words_counter):
     if w not in words_counter:
         if w in top_100_english_words:
-            word_frequency = TOP100
+            word_list = TOP100
         elif w in from100_to1000_basic_words:
-            word_frequency = TOP1000
+            word_list = TOP1000
         else:
-            word_frequency = ''
-        words_counter[w] = [0, word_frequency, '']
+            word_list = ''
+        words_counter[w] = [0, word_list, '']
     words_counter[w][0] += 1
 
 
