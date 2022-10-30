@@ -3,7 +3,7 @@ import argparse
 from words_dicts import top_100_english_words, from100_to1000_basic_words
 
 TOP100 = '(in top 100)'
-TOP1000 = '(in top from 100 to 1000)'
+TOP1000 = '(from 100 to 1000)'
 
 arg_parser = argparse.ArgumentParser(description='Count number of words in a text. '
                                                  'Detect words from top 100 and top 1000 lists.')
@@ -132,6 +132,11 @@ def count_words(text):
 def recount_variants(words, variant_list, variant_type):
     size = len(variant_type)
     for v in variant_list:
+
+        # exception: 'not' is not related to notes, noted, noting
+        if v[:-size] == 'not':
+            continue
+
         if words[v[:-size]][2]:
             words[v[:-size]][2] = words[v[:-size]][2][:-1] + f"; {words[v][0]} with {variant_type}: {v})"
         else:
@@ -151,16 +156,40 @@ def count_apostrophes(words):
     recount_variants(words, apostrophes, "'s")
 
 
-def count_plurals(words):
-    """Actually not only plurals, any words with s at the end
-    (e.g. its, makes)"""
-    plurals = []
+def count_forms(words):
+    """Find forms of word (end: ends, ended, ending)"""
+    # TODO: refactoring
+    forms_s = []
+    forms_es = []
+    forms_ed = []
+    forms_d = []
+    forms_ing = []
     for w in words:
-        if w[-1] == 's' and len(w) > 2:
+        if w[-1] == 's' and len(w) > 3:
             if w[:-1] in words:
-                plurals.append(w)
+                forms_s.append(w)
+            elif w[-2:] == 'es':
+                if w[:-2] in words:
+                    forms_es.append(w)
+        if w[-2:] == 'ed' and len(w) > 4:
+            if w[:-2] in words:
+                forms_ed.append(w)
+            if w[:-1] in words:
+                forms_d.append(w)
+        if w[-3:] == 'ing' and len(w) > 5:
+            if w[:-3] in words:
+                forms_ing.append(w)
 
-    recount_variants(words, plurals, 's')
+    if forms_s:
+        recount_variants(words, forms_s, 's')
+    if forms_es:
+        recount_variants(words, forms_es, 'es')
+    if forms_ed:
+        recount_variants(words, forms_ed, 'ed')
+    if forms_d:
+        recount_variants(words, forms_d, 'd')
+    if forms_ing:
+        recount_variants(words, forms_ing, 'ing')
 
 
 def print_sizes(sizes):
@@ -182,7 +211,7 @@ def size_of_words(words):
 
 def main():
     words, not_words = count_words(get_text())
-    count_plurals(words)
+    count_forms(words)
     count_apostrophes(words)
     print_totals(words)
     print_sorted_by_number(words)
