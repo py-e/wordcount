@@ -129,20 +129,16 @@ def count_words(text):
     return words_counter, not_words
 
 
-def recount_variants(words, variant_list, variant_type):
-    size = len(variant_type)
-    for v in variant_list:
+def recount_variants(words, variant_list):
+    for form, word, form_type in variant_list:
 
         # exception: 'not' is not related to notes, noted, noting
-        if v[:-size] == 'not':
+        if word == 'not':
             continue
 
-        if words[v[:-size]][2]:
-            words[v[:-size]][2] = words[v[:-size]][2][:-1] + f"; {words[v][0]} with {variant_type}: {v})"
-        else:
-            words[v[:-size]][2] = f"({words[v][0]} with {variant_type}: {v})"
-        words[v[:-size]][0] += words[v][0]
-        del words[v]
+        words[word][2] += f"({words[form][0]} with {form_type}: {form})"
+        words[word][0] += words[form][0]
+        del words[form]
 
 
 def count_apostrophes(words):
@@ -151,45 +147,35 @@ def count_apostrophes(words):
         if "'" in w:
             if w[-2:] == "'s":
                 if w[:-2] in words:
-                    apostrophes.append(w)
+                    apostrophes.append((w, w[:-2], "'s"))
 
-    recount_variants(words, apostrophes, "'s")
+    recount_variants(words, apostrophes)
 
 
 def count_forms(words):
     """Find forms of word (end: ends, ended, ending)"""
     # TODO: refactoring
-    forms_s = []
-    forms_es = []
-    forms_ed = []
-    forms_d = []
-    forms_ing = []
+    forms = []
     for w in words:
         if w[-1] == 's' and len(w) > 3:
             if w[:-1] in words:
-                forms_s.append(w)
+                forms.append((w, w[:-1], 's'))
             elif w[-2:] == 'es':
                 if w[:-2] in words:
-                    forms_es.append(w)
+                    forms.append((w, w[:-2], 'es'))
         if w[-2:] == 'ed' and len(w) > 4:
             if w[:-2] in words:
-                forms_ed.append(w)
-            if w[:-1] in words:
-                forms_d.append(w)
+                forms.append((w, w[:-2], 'ed'))
+            elif w[:-1] in words:
+                forms.append((w, w[:-1], 'd'))
         if w[-3:] == 'ing' and len(w) > 5:
             if w[:-3] in words:
-                forms_ing.append(w)
+                forms.append((w, w[:-3], 'ing'))
+            elif w[:-3]+'e' in words:
+                forms.append((w, w[:-3]+'e', 'ing'))
 
-    if forms_s:
-        recount_variants(words, forms_s, 's')
-    if forms_es:
-        recount_variants(words, forms_es, 'es')
-    if forms_ed:
-        recount_variants(words, forms_ed, 'ed')
-    if forms_d:
-        recount_variants(words, forms_d, 'd')
-    if forms_ing:
-        recount_variants(words, forms_ing, 'ing')
+    if forms:
+        recount_variants(words, forms)
 
 
 def print_sizes(sizes):
