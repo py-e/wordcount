@@ -129,53 +129,56 @@ def count_words(text):
     return words_counter, not_words
 
 
-def recount_variants(words, variant_list):
-    for form, word, form_type in variant_list:
+def recount_variants(words, variants):
+    for form_type, pair in variants.items():
+        for form, word in pair:
+            # exception: 'not' is not related to notes, noted, noting
+            if word == 'not':
+                continue
 
-        # exception: 'not' is not related to notes, noted, noting
-        if word == 'not':
-            continue
-
-        words[word][2] += f"({words[form][0]} with {form_type}: {form})"
-        words[word][0] += words[form][0]
-        del words[form]
+            words[word][2] += f"({words[form][0]} with {form_type}: {form})"
+            words[word][0] += words[form][0]
+            del words[form]
 
 
 def count_apostrophes(words):
-    apostrophes = []
+    apostrophes = {"'s": []}
     for w in words:
         if "'" in w:
             if w[-2:] == "'s":
                 if w[:-2] in words:
-                    apostrophes.append((w, w[:-2], "'s"))
+                    apostrophes["'s"].append((w, w[:-2]))
 
     recount_variants(words, apostrophes)
 
 
 def count_forms(words):
     """Find forms of word (end: ends, ended, ending)"""
-    # TODO: refactoring
-    forms = []
+    forms = {'s': [], 'es': [], 'ed': [], 'd': [], 'ing': []}
     for w in words:
+        # s/es: plant <- plant[s], moss <- moss[es]
         if w[-1] == 's' and len(w) > 3:
             if w[:-1] in words:
-                forms.append((w, w[:-1], 's'))
+                forms['s'].append((w, w[:-1]))
             elif w[-2:] == 'es':
                 if w[:-2] in words:
-                    forms.append((w, w[:-2], 'es'))
+                    forms['es'].append((w, w[:-2]))
+
+        # ed/d: touch <- touch[ed], release <- release[d]
         if w[-2:] == 'ed' and len(w) > 4:
             if w[:-2] in words:
-                forms.append((w, w[:-2], 'ed'))
+                forms['ed'].append((w, w[:-2]))
             elif w[:-1] in words:
-                forms.append((w, w[:-1], 'd'))
+                forms['d'].append((w, w[:-1]))
+
+        # ing: touch <- touch[ing], write <- writ(e) <- writ[ing]
         if w[-3:] == 'ing' and len(w) > 5:
             if w[:-3] in words:
-                forms.append((w, w[:-3], 'ing'))
+                forms['ing'].append((w, w[:-3]))
             elif w[:-3]+'e' in words:
-                forms.append((w, w[:-3]+'e', 'ing'))
+                forms['ing'].append((w, w[:-3]+'e'))
 
-    if forms:
-        recount_variants(words, forms)
+    recount_variants(words, forms)
 
 
 def print_sizes(sizes):
