@@ -3,6 +3,7 @@ import glob
 import argparse
 
 from words_dicts import top_100_english_words, from100_to1000_basic_words
+from decorators import timer
 
 TOP100 = '(in top 100)'
 TOP1000 = '(from 100 to 1000)'
@@ -235,9 +236,8 @@ def size_of_words(words):
     return sizes
 
 
+@timer
 def add_to_base(base, word):
-    # file_path = os.path.join(SCRIPT_DIR, f'txt/{word[0]}.txt'
-    # if os.path.exists()
     with open(os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt'), 'a+') as f:
         f.write(word+'\n')
     print(f'{word}, added to ({base})')
@@ -298,14 +298,13 @@ def main():
         if command[:3] in ('l1:', 'l2:'):
             # print('add word to the list')
             add_to_list(command[:2], command[3:], sorted_words)
-        elif command in ('-l1', '-l2'):
-            print('hide/show words from the list')
         elif command == 'q':
             break
         else:
             print('Command is not recognized')
 
 
+@timer
 def print_base(base, first_letters=''):
     if first_letters:
         db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{first_letters[0]}.txt')
@@ -323,6 +322,7 @@ def print_base(base, first_letters=''):
         print(e, word)
 
 
+@timer
 def word_in_base(base, word):
     try:
         db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt')
@@ -354,7 +354,7 @@ def rem_from_txt(base, word):
     with open(db_txt_file) as f:
         for line in f:
             lines.append(line)
-            if word == line:
+            if word == line.replace('\n', ''):
                 word_found_in_txt = True
     if word_found_in_txt:
         with open(db_txt_file, 'w') as f:
@@ -367,6 +367,7 @@ def rem_from_txt(base, word):
     return removed
 
 
+@timer
 def rem_words(base, str_words):
     list_words = str_words.lower().split()
     removed = []

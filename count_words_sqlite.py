@@ -2,6 +2,7 @@ import argparse
 import sqlite3
 
 from words_dicts import top_100_english_words, from100_to1000_basic_words
+from decorators import timer
 
 TOP100 = '(in top 100)'
 TOP1000 = '(from 100 to 1000)'
@@ -224,6 +225,7 @@ def size_of_words(words):
     return sizes
 
 
+@timer
 def add_to_base(base, word):
     try:
         c.execute(f"""INSERT INTO {base} VALUES ("{word}")""")
@@ -288,19 +290,19 @@ def main():
         if command[:3] in ('l1:', 'l2:'):
             # print('add word to the list')
             add_to_list(command[:2], command[3:], sorted_words)
-        elif command in ('-l1', '-l2'):
-            print('hide/show words from the list')
         elif command == 'q':
             break
         else:
             print('Command is not recognized')
 
 
+@timer
 def print_base(base, first_letters=''):
     for e, (result,) in enumerate(c.execute(f"""SELECT word FROM {base} WHERE word LIKE "{first_letters}%" ORDER BY word"""), 1):
         print(e, result)
 
 
+@timer
 def word_in_base(base, word):
     c.execute(f"""SELECT word FROM {base} WHERE word IS "{word}" """)
     if c.fetchall():
@@ -319,6 +321,7 @@ def add_words(base, str_words):
             add_to_base(base, w)
 
 
+@timer
 def rem_words(base, str_words):
     list_words = str_words.lower().split()
     removed = []

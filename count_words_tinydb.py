@@ -4,6 +4,7 @@ import argparse
 from tinydb import TinyDB, Query, where
 
 from words_dicts import top_100_english_words, from100_to1000_basic_words
+from decorators import timer
 
 TOP100 = '(in top 100)'
 TOP1000 = '(from 100 to 1000)'
@@ -225,6 +226,7 @@ def size_of_words(words):
     return sizes
 
 
+@timer
 def add_to_base(base, word):
     db = l1_db if base == 'l1' else l2_db
     db.insert({'word': word})
@@ -286,14 +288,13 @@ def main():
         if command[:3] in ('l1:', 'l2:'):
             # print('add word to the list')
             add_to_list(command[:2], command[3:], sorted_words)
-        elif command in ('-l1', '-l2'):
-            print('hide/show words from the list')
         elif command == 'q':
             break
         else:
             print('Command is not recognized')
 
 
+@timer
 def print_base(base, first_letters=None):
     db = l1_db if base == 'l1' else l2_db
     data_from_base = db.search(Query().word.matches(first_letters)) if first_letters else db.all()
@@ -302,6 +303,7 @@ def print_base(base, first_letters=None):
         print(e, i['word'])
 
 
+@timer
 def word_in_base(base, word):
     db = l1_db if base == 'l1' else l2_db
     l_base = (i['word'] for i in db.all())
@@ -321,6 +323,7 @@ def add_words(base, str_words):
             add_to_base(base, w)
 
 
+@timer
 def rem_words(base, str_words):
     db = l1_db if base == 'l1' else l2_db
     list_words = str_words.lower().split()
