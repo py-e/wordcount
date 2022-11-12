@@ -20,10 +20,15 @@ arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='prin
 arg_parser.add_argument('-e', '--edit_base', action='store_true', help='edit list of words in l1 and l2 bases')
 args = arg_parser.parse_args()
 
-if not os.path.isdir('db'):
-    os.mkdir('db')
-l1_db = TinyDB('./db/l1.json')
-l2_db = TinyDB('./db/l2.json')
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+dir_path = os.path.join(SCRIPT_DIR, 'db')
+if not os.path.isdir(dir_path):
+    os.mkdir(dir_path)
+
+db_file_path = os.path.join(dir_path, 'l1.json')
+l1_db = TinyDB(db_file_path)
+db_file_path = os.path.join(dir_path, 'l2.json')
+l2_db = TinyDB(db_file_path)
 
 
 def get_text():

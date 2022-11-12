@@ -1,3 +1,4 @@
+import os
 import argparse
 import sqlite3
 
@@ -18,7 +19,13 @@ arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='prin
 arg_parser.add_argument('-e', '--edit_base', action='store_true', help='edit list of words in l1 and l2 bases')
 args = arg_parser.parse_args()
 
-conn = sqlite3.connect('db/user_lists.db')
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+dir_path = os.path.join(SCRIPT_DIR, 'db')
+if not os.path.isdir(dir_path):
+    os.mkdir(dir_path)
+
+db_file_path = os.path.join(dir_path, 'user_lists.db')
+conn = sqlite3.connect(db_file_path)
 c = conn.cursor()
 c.execute("""CREATE TABLE IF NOT EXISTS l1 (word TEXT UNIQUE)""")
 c.execute("""CREATE TABLE IF NOT EXISTS l2 (word TEXT UNIQUE)""")
