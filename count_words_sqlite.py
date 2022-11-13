@@ -232,7 +232,7 @@ def size_of_words(words):
     return sizes
 
 
-@timer
+# @timer
 def add_to_base(base, word):
     try:
         c.execute(f"""INSERT INTO {base} VALUES ("{word}")""")
@@ -305,11 +305,12 @@ def main():
 
 @timer
 def print_base(base, first_letters=''):
-    for e, (result,) in enumerate(c.execute(f"""SELECT word FROM {base} WHERE word LIKE "{first_letters}%" ORDER BY word"""), 1):
+    stripped_fl = first_letters.strip()
+    for e, (result,) in enumerate(c.execute(f"""SELECT word FROM {base} WHERE word LIKE "{stripped_fl}%" ORDER BY word"""), 1):
         print(e, result)
 
 
-@timer
+# @timer
 def word_in_base(base, word):
     c.execute(f"""SELECT word FROM {base} WHERE word IS "{word}" """)
     if c.fetchall():
@@ -317,6 +318,7 @@ def word_in_base(base, word):
         return True
 
 
+@timer
 def add_words(base, str_words):
     list_words = str_words.lower().split()
     for w in list_words:

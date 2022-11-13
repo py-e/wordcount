@@ -236,7 +236,7 @@ def size_of_words(words):
     return sizes
 
 
-@timer
+# @timer
 def add_to_base(base, word):
     with open(os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt'), 'a+') as f:
         f.write(word+'\n')
@@ -307,12 +307,14 @@ def main():
 @timer
 def print_base(base, first_letters=''):
     if first_letters:
-        db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{first_letters[0]}.txt')
+        stripped_fl = first_letters.strip()
+        db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{stripped_fl[0]}.txt')
+        print(db_txt_file)
         list_from_txt = []
         with open(db_txt_file) as f:
             for line in f:
-                if line.startswith(first_letters):
-                    list_from_txt.append(line)
+                if line.startswith(stripped_fl):
+                    list_from_txt.append(line.replace('\n', ''))
     else:
         list_from_txt = get_words_from_txt(base)
     # if list_from_txt:
@@ -322,7 +324,7 @@ def print_base(base, first_letters=''):
         print(e, word)
 
 
-@timer
+# @timer
 def word_in_base(base, word):
     try:
         db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt')
@@ -335,6 +337,7 @@ def word_in_base(base, word):
         return False
 
 
+@timer
 def add_words(base, str_words):
     list_words = str_words.lower().split()
     for w in list_words:

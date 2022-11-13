@@ -231,7 +231,7 @@ def size_of_words(words):
     return sizes
 
 
-@timer
+# @timer
 def add_to_base(base, word):
     db = l1_db if base == 'l1' else l2_db
     db.insert({'word': word})
@@ -302,13 +302,17 @@ def main():
 @timer
 def print_base(base, first_letters=None):
     db = l1_db if base == 'l1' else l2_db
-    data_from_base = db.search(Query().word.matches(first_letters)) if first_letters else db.all()
+    if first_letters:
+        stripped_fl = first_letters.strip()
+        data_from_base = db.search(Query().word.matches(stripped_fl))
+    else:
+        data_from_base = db.all()
     ordered_data = sorted(data_from_base, key=lambda k: k['word'])
     for e, i in enumerate(ordered_data, 1):
         print(e, i['word'])
 
 
-@timer
+# @timer
 def word_in_base(base, word):
     db = l1_db if base == 'l1' else l2_db
     l_base = (i['word'] for i in db.all())
@@ -317,6 +321,7 @@ def word_in_base(base, word):
         return True
 
 
+@timer
 def add_words(base, str_words):
     list_words = str_words.lower().split()
     for w in list_words:
