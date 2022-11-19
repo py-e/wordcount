@@ -244,32 +244,36 @@ def write_to_base(base, word):
 def add_to_base(base, str_elements, words=None):
     elements = str_elements.split()
     indexes_to_add = set()
+    words_to_add = set()
     for el in elements:
-        if el.isdigit():        # index
-            if words:
-                el_int = int(el)
-                if el_int not in range(1, len(words) + 1):
-                    print(f'"{el_int}" is out of range (1 .. {len(words)})')
-                else:
-                    indexes_to_add.add(el_int)
-            else:
-                print(f'{el} - seems a digit')
-        else:                   # word
-            if el in top_100_english_words:
-                print(f'{el}, already in {TOP100}')
-            elif el in from100_to1000_basic_words:
-                print(f'{el}, already in {TOP1000}')
-            elif not word_in_base(base, el):
-                write_to_base(base, el)
+        if el.isdigit():
+            indexes_to_add.add(int(el))
+        else:
+            words_to_add.add(el)
 
     if indexes_to_add:
-        list_words = list(words)
-        for i in indexes_to_add:
-            if words[list_words[i - 1]][1]:
-                print(f'{i}, {list_words[i - 1]}, already in {words[list_words[i - 1]][1]}')
-            else:
-                write_to_base(base, list_words[i - 1])
-                words[list_words[i - 1]][1] = f'({base})'
+        if words:
+            list_words = list(words)
+            for i in indexes_to_add:
+                try:
+                    words_to_add.add(list_words[i - 1])
+                except IndexError:
+                    print(f'{i} - is out of range')
+        else:
+            print(f'seems a digit: {indexes_to_add}')
+
+    for word in words_to_add:
+        if word in top_100_english_words:
+            print(f'{word}, already in {TOP100}')
+        elif word in from100_to1000_basic_words:
+            print(f'{word}, already in {TOP1000}')
+        elif not word_in_base(base, word):
+            write_to_base(base, word)
+            try:
+                words[word][1] = f'({base})'
+            except (KeyError, TypeError):
+                # word is not from text, just skip
+                pass
 
 
 def main():
