@@ -235,45 +235,41 @@ def size_of_words(words):
     return sizes
 
 
-def add_to_base(base, word):
+def write_to_base(base, word):
     with open(os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt'), 'a+') as f:
         f.write(word+'\n')
     print(f'{word}, added to ({base})')
 
 
-def add_to_list(base, str_indexes, words):
-    indexes = str_indexes.split()
-    indexes_int = set()
-    for i in indexes:
-        try:
-            i_int = int(i)
-        except ValueError:
-            print(f'"{i}" is not an index (it should be a number)')
-            continue
-        if i_int not in range(1, len(words)+1):
-            print(f'"{i}" is out of range (1 .. {len(words)})')
-            continue
-        indexes_int.add(i_int)
+def add_to_base(base, str_elements, words=None):
+    elements = str_elements.split()
+    indexes_to_add = set()
+    for el in elements:
+        if el.isdigit():        # index
+            if words:
+                el_int = int(el)
+                if el_int not in range(1, len(words) + 1):
+                    print(f'"{el_int}" is out of range (1 .. {len(words)})')
+                else:
+                    indexes_to_add.add(el_int)
+            else:
+                print(f'{el} - seems a digit')
+        else:                   # word
+            if el in top_100_english_words:
+                print(f'{el}, already in {TOP100}')
+            elif el in from100_to1000_basic_words:
+                print(f'{el}, already in {TOP1000}')
+            elif not word_in_base(base, el):
+                write_to_base(base, el)
 
-    if indexes_int:
-        # 1
-        print('---1')
-        for k in words:
-            if words[k][3] in indexes_int:
-                print(f'found: {words[k][3]}, {k}, {words[k]}')
-
-        # 2
-        print('---2')
+    if indexes_to_add:
         list_words = list(words)
-        for i in indexes_int:
+        for i in indexes_to_add:
             if words[list_words[i - 1]][1]:
                 print(f'{i}, {list_words[i - 1]}, already in {words[list_words[i - 1]][1]}')
             else:
-                add_to_base(base, list_words[i - 1])
+                write_to_base(base, list_words[i - 1])
                 words[list_words[i - 1]][1] = f'({base})'
-                # print(f'{i}, {list_words[i - 1]}, added to ({base})')
-        input('press Enter to continue (print the words)')
-        print_sorted_by_number(words)
 
 
 def main():
@@ -287,15 +283,19 @@ def main():
     if args.size_of_words:
         print_sizes(size_of_words(sorted_words))
 
-    print('You can add words to the lists (l1, l2) by indexes, like: "l1: 4 15 21"\n'
+    print('You can add words to the lists (l1, l2)\n'
+          'by indexes, like: "l1 add: 4 15 21"\n'
+          'or just words, like: "l1 add: word, wood"\n'
           'l1 - list of words one - I know these words very well\n'
           'l2 - list of words two - I know the words basically, but can forget\n'
+          '"p" - print the words\n'
           '"q" - to exit')
     while 1:
         command = input('Provide the command: ')
-        if command[:3] in ('l1:', 'l2:'):
-            # print('add word to the list')
-            add_to_list(command[:2], command[3:], sorted_words)
+        if command[:7] in ('l1 add:', 'l2 add:'):
+            add_to_base(command[:2], command[7:], sorted_words)
+        elif command == 'p':
+            sorted_words = print_sorted_by_number(words)
         elif command == 'q':
             break
         else:
@@ -314,10 +314,9 @@ def print_base(base, first_letters=''):
                     list_from_txt.append(line.replace('\n', ''))
     else:
         list_from_txt = get_words_from_txt(base)
-    # if list_from_txt:
+
     list_from_txt.sort()
     for e, word in enumerate(list_from_txt, 1):
-    # for e, word in enumerate(list_from_txt, 1):
         print(e, word)
 
 
@@ -331,17 +330,6 @@ def word_in_base(base, word):
     except FileNotFoundError:
         # print(f'{word}, is not found in ({base})')
         return False
-
-
-def add_words(base, str_words):
-    list_words = str_words.lower().split()
-    for w in list_words:
-        if w in top_100_english_words:
-            print(f'{w}, already in {TOP100}')
-        elif w in from100_to1000_basic_words:
-            print(f'{w}, already in {TOP1000}')
-        elif not word_in_base(base, w):
-            add_to_base(base, w)
 
 
 def rem_from_txt(base, word):
@@ -391,7 +379,7 @@ def edit_base():
             print_base(command[:2], command[3:])
         elif command[:2] in ('l1', 'l2'):
             if command[2:7] == ' add:':
-                add_words(command[:2], command[7:])
+                add_to_base(command[:2], command[7:])
             elif command[2:7] == ' rem:':
                 rem_words(command[:2], command[7:])
         elif command == 'q':
