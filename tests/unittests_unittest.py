@@ -11,13 +11,13 @@ class UT(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-        for d in ('db', 'db/txt', 'db/txt/l1', 'db/txt/l2'):
-            dir_path = os.path.join(SCRIPT_DIR, d)
-            if not os.path.isdir(dir_path):
-                os.mkdir(dir_path)
-
+        # For test launches: relocate SCRIPT_DIR from root to /tests
         count_words.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+        # Create db hierarchy in /tests
+        for d in ('db', 'db/txt', 'db/txt/l1', 'db/txt/l2'):
+            cls.dir_path = os.path.join(count_words.SCRIPT_DIR, d)
+            if not os.path.isdir(cls.dir_path):
+                os.mkdir(cls.dir_path)
 
     def test_read_text(self):
         """count_words.get_text()"""
@@ -58,6 +58,11 @@ class UT(unittest.TestCase):
         ret = count_words.cleanup_word(word_to_cleanup)
         self.assertEqual(word, ret, f'"{word}" is expected after cleanup')
 
+    """
+    print_totals(words)
+    print statements
+    """
+
     def test_sort_and_exclude(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
@@ -85,6 +90,48 @@ class UT(unittest.TestCase):
         expected_order = ['fifteen', 'ten', 'twice']
         ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'])
         check_results(expected_order, ret_sorted_words)
+
+    """
+    print_sorted_by_number(words)
+    Launch sort_and_exclude and print results
+    """
+
+    def test_add_to_counter(self):
+        """
+        count_words.add_to_counter(w, words_counter, l1, l2)
+        """
+        word3 = 'word'
+        word2 = 'test'
+        word1 = 'prerequisite'
+        l1 = [word3, word2, 'debug']
+        l2 = [word1, 'snippet']
+        words_counter = {}
+        for word in (word3, word1, word3, word2, word3, word2):
+            count_words.add_to_counter(word, words_counter, l1, l2)
+        self.assertEqual(3, words_counter[word3][0], f'"{word3}" was added three times')
+        self.assertEqual(2, words_counter[word2][0], f'"{word2}" was added two times')
+        self.assertEqual(1, words_counter[word1][0], f'"{word1}" was added once')
+
+    def test_get_words_from_txt(self):
+        """
+        count_words.get_words_from_txt(base)
+
+        Write files (c.txt, v.txt) to l2 dir.
+        Check that all words from l2 base returned by the function.
+        """
+        l2_base_dir = __class__.dir_path
+        files = (['cell', 'cadmium'], ['velocity'])
+        all_words = []
+        for file in files:
+            file_name = file[0][0]+'.txt'
+            file_path = os.path.join(l2_base_dir, file_name)
+            with open(file_path, 'w') as f:
+                for word in file:
+                    all_words.append(word)
+                    f.write(word+'\n')
+
+        ret = count_words.get_words_from_txt('l2')
+        self.assertCountEqual(all_words, ret, f'Expected words from the base: {all_words}')
 
     def test_write_read_base(self):
         """count_words.write_to_base, count_words.word_in_base"""
