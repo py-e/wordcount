@@ -86,10 +86,9 @@ def sort_and_exclude(words, exclude=None):
     else:
         sorted_words = {k: v for k, v in sorted(words.items(), key=lambda item: item[1][0], reverse=True)}
 
-    # Add index to the words data structure.
-    # key: word; value: [frequency, list, variants, index]
+    # Data structure - key: word; value: [frequency, list, variants, index]
     for e, (k, v) in enumerate(sorted_words.items(), 1):
-        v.append(e)
+        v[3] = e
     return sorted_words
 
 
@@ -135,7 +134,8 @@ def add_to_counter(w, words_counter, l1, l2):
             word_list = '(l2)'
         else:
             word_list = ''
-        words_counter[w] = [0, word_list, '']
+        # Data structure - key: word; value: [frequency, list, variants, index]
+        words_counter[w] = [0, word_list, '', '']
     words_counter[w][0] += 1
 
 
