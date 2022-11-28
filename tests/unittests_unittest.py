@@ -133,6 +133,75 @@ class UT(unittest.TestCase):
         ret = count_words.get_words_from_txt('l2')
         self.assertCountEqual(all_words, ret, f'Expected words from the base: {all_words}')
 
+    def test_count_words(self):
+        """
+        count_words.count_words(text)
+
+        Text for test: some words with symbols to clean up, and some not words.
+        One word in l2 base.
+        """
+        word4 = {'word': 'word',            'variants': ('word', '-&7word', 'word")', 'word")')}
+        word3 = {'word': 'test',            'variants': ('-=test=-', 'test....', r'\test/')}
+        word2 = {'word': "prerequisite's",  'variants': ('prerequisite`s', 'prerequisite’s')}
+        not_words = ('75', '#*!')
+        text = ' '.join([word3['variants'][0], word4['variants'][0], not_words[0], word4['variants'][1],
+                         word2['variants'][0], word3['variants'][1], word2['variants'][1],
+                         word4['variants'][2], word3['variants'][2], word4['variants'][3], not_words[1]])
+
+        l2_base_dir = __class__.dir_path
+        file_name = word2['word'][0] + '.txt'
+        file_path = os.path.join(l2_base_dir, file_name)
+        with open(file_path, 'w') as f:
+            f.write(word2['word'] + '\n')
+
+        expected_words_counter = {word3['word']: [3, '(from 100 to 1000)', '', ''],
+                                  word4['word']: [4, '(from 100 to 1000)', '', ''],
+                                  word2['word']: [2, '(l2)', '', '']}
+        ret_words_counter, ret_not_words = count_words.count_words(text)
+        try:
+            self.assertCountEqual(expected_words_counter, ret_words_counter, f'Expected: {expected_words_counter}')
+            self.assertCountEqual(not_words, ret_not_words, f'Expected: {not_words}')
+        finally:
+            os.remove(file_path)
+
+    """
+    recount_variants(words, variants)
+    Launched in count_forms(), count_apostrophes()
+    """
+
+    def test_count_forms(self):
+        """
+        count_words.count_forms(words)
+
+        Checking endings: 's', 'es', 'ed', 'd', 'ing'
+        """
+        words = {'word': [1, '(from 100 to 1000)', '', ''], 'words': [1, '', '', ''], 'worded': [1, '', '', ''],
+                 'wording': [1, '', '', '']}
+        count_words.count_forms(words)
+        self.assertEqual(1, len(words), '4 forms collapsed to 1: word <- words, worded, wording')
+        self.assertEqual(4, words['word'][0], '4 forms collapsed to 1: word <- words, worded, wording')
+
+        words = {'moss': [1, '', '', ''], 'mosses': [1, '', '', '']}
+        count_words.count_forms(words)
+        self.assertEqual(1, len(words), '2 forms collapsed to 1: moss <- mosses')
+        self.assertEqual(2, words['moss'][0], '2 forms collapsed to 1: moss <- mosses')
+
+        words = {'observe': [1, '', '', ''], 'observed': [1, '', '', '']}
+        count_words.count_forms(words)
+        self.assertEqual(1, len(words), '2 forms collapsed to 1: observe <- observed')
+        self.assertEqual(2, words['observe'][0], '2 forms collapsed to 1: observe <- observed')
+
+    def test_count_apostrophes(self):
+        """
+        count_words.count_apostrophes(words)
+
+        Checking ending: "'s"
+        """
+        words = {'moss': [1, '', '', ''], "moss's": [1, '', '', '']}
+        count_words.count_apostrophes(words)
+        self.assertEqual(1, len(words), "2 forms collapsed to 1: moss <- moss's")
+        self.assertEqual(2, words['moss'][0], "2 forms collapsed to 1: moss <- moss's")
+
     def test_write_read_base(self):
         """count_words.write_to_base, count_words.word_in_base"""
         word_for_test = 'hello'

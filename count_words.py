@@ -150,6 +150,16 @@ def get_words_from_txt(base):
 
 
 def count_words(text):
+    """
+    Split words from text, then:
+        - convert to lowercase,
+        - clean up (symbols before and after),
+        - convert some symbols to one format (apostrophe)
+    And then add_to_counter() launched for each word.
+
+    :returns: (words with frequency and base, not words)
+    :rtype: (dict, set)
+    """
     l1 = get_words_from_txt('l1')
     l2 = get_words_from_txt('l2')
     words_counter = {}
