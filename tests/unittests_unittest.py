@@ -8,6 +8,10 @@ import count_words
 
 
 class UT(unittest.TestCase):
+    """
+    Unit tests draft.
+    First approach: launch evident tests for every function as test_<function_name>.
+    """
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -20,7 +24,10 @@ class UT(unittest.TestCase):
                 os.mkdir(cls.dir_path)
 
     def test_read_text(self):
-        """count_words.get_text()"""
+        """count_words.get_text()
+
+        Kind of integration test: write/read file system.
+        """
         temp_file = os.path.join(count_words.SCRIPT_DIR, '_temp_text.txt')
         words_to_write = """hello unit test
 
@@ -30,12 +37,13 @@ class UT(unittest.TestCase):
         with open(temp_file, 'w') as f:
             f.write(words_to_write)
 
-        count_words.args.file = temp_file
-        ret = count_words.get_text()
-        ret_list = ret.split()
-        self.assertEqual(words_number, len(ret_list), f'Should be {words_number} words')
-
-        os.remove(temp_file)
+        try:
+            count_words.args.file = temp_file
+            ret = count_words.get_text()
+            ret_list = ret.split()
+            self.assertEqual(words_number, len(ret_list), f'Should be {words_number} words')
+        finally:
+            os.remove(temp_file)
 
     def test_cleanup_beginning(self):
         """count_words.cleanup_beginning(word)"""
@@ -52,7 +60,10 @@ class UT(unittest.TestCase):
         self.assertEqual(word, ret, f'"{word}" is expected after cleanup')
 
     def test_cleanup_word(self):
-        """count_words.cleanup_word(word)"""
+        """count_words.cleanup_word(word)
+
+        Sort of integration test: launch other modules (cleanup_beginning, cleanup_end)
+        """
         word = 'recursion'
         word_to_cleanup = '-15:'+word+'-#7;'
         ret = count_words.cleanup_word(word_to_cleanup)
@@ -69,10 +80,10 @@ class UT(unittest.TestCase):
         Sort by frequency
         Data format:  key: word; value: [frequency, list, variants, index]
         """
-        def check_results(expected_order, ret_sorted_words):
+        def check_results():
             for e, key in enumerate(ret_sorted_words):
                 self.assertEqual(expected_order[e], key, f'Expected: {expected_order[e]}')
-                self.assertEqual(e+1, ret_sorted_words[key][3], f'Expected number: {e+1}')
+                self.assertEqual(e+1, ret_sorted_words[key][3], f'Expected index: {e+1}')
 
         words = {'one':     [1, '(in top 100)', '', ''],
                  'ten':     [10, '(from 100 to 1000)', '', ''],
@@ -84,12 +95,12 @@ class UT(unittest.TestCase):
         # 1 - Sort only
         expected_order = ['eighty', 'fifteen', 'ten', 'two', 'twice', 'one']
         ret_sorted_words = count_words.sort_and_exclude(words)
-        check_results(expected_order, ret_sorted_words)
+        check_results()
 
         # 2 - Sort & exclude
         expected_order = ['fifteen', 'ten', 'twice']
         ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'])
-        check_results(expected_order, ret_sorted_words)
+        check_results()
 
     """
     print_sorted_by_number(words)
@@ -116,27 +127,35 @@ class UT(unittest.TestCase):
         """
         count_words.get_words_from_txt(base)
 
+        Kind of integration test: write/read file system.
         Write files (c.txt, v.txt) to l2 dir.
         Check that all words from l2 base returned by the function.
         """
         l2_base_dir = __class__.dir_path
         files = (['cell', 'cadmium'], ['velocity'])
+        file_paths = []
         all_words = []
         for file in files:
             file_name = file[0][0]+'.txt'
             file_path = os.path.join(l2_base_dir, file_name)
+            file_paths.append(file_path)
             with open(file_path, 'w') as f:
                 for word in file:
                     all_words.append(word)
                     f.write(word+'\n')
 
-        ret = count_words.get_words_from_txt('l2')
-        self.assertCountEqual(all_words, ret, f'Expected words from the base: {all_words}')
+        try:
+            ret = count_words.get_words_from_txt('l2')
+            self.assertCountEqual(all_words, ret, f'Expected words from the base: {all_words}')
+        finally:
+            for file in file_paths:
+                os.remove(file)
 
     def test_count_words(self):
         """
         count_words.count_words(text)
 
+        Kind of integration test: write/read file system.
         Text for test: some words with symbols to clean up, and some not words.
         One word in l2 base.
         """
@@ -157,8 +176,8 @@ class UT(unittest.TestCase):
         expected_words_counter = {word3['word']: [3, '(from 100 to 1000)', '', ''],
                                   word4['word']: [4, '(from 100 to 1000)', '', ''],
                                   word2['word']: [2, '(l2)', '', '']}
-        ret_words_counter, ret_not_words = count_words.count_words(text)
         try:
+            ret_words_counter, ret_not_words = count_words.count_words(text)
             self.assertCountEqual(expected_words_counter, ret_words_counter, f'Expected: {expected_words_counter}')
             self.assertCountEqual(not_words, ret_not_words, f'Expected: {not_words}')
         finally:
@@ -168,6 +187,17 @@ class UT(unittest.TestCase):
     recount_variants(words, variants)
     Launched in count_forms(), count_apostrophes()
     """
+
+    def test_count_apostrophes(self):
+        """
+        count_words.count_apostrophes(words)
+
+        Checking ending: "'s"
+        """
+        words = {'moss': [1, '', '', ''], "moss's": [1, '', '', '']}
+        count_words.count_apostrophes(words)
+        self.assertEqual(1, len(words), "2 forms collapsed to 1: moss <- moss's")
+        self.assertEqual(2, words['moss'][0], "2 forms collapsed to 1: moss <- moss's")
 
     def test_count_forms(self):
         """
@@ -191,23 +221,142 @@ class UT(unittest.TestCase):
         self.assertEqual(1, len(words), '2 forms collapsed to 1: observe <- observed')
         self.assertEqual(2, words['observe'][0], '2 forms collapsed to 1: observe <- observed')
 
-    def test_count_apostrophes(self):
-        """
-        count_words.count_apostrophes(words)
+    """
+    print_sizes(sizes)
+    print statements
+    """
 
-        Checking ending: "'s"
+    def test_size_of_words(self):
         """
-        words = {'moss': [1, '', '', ''], "moss's": [1, '', '', '']}
-        count_words.count_apostrophes(words)
-        self.assertEqual(1, len(words), "2 forms collapsed to 1: moss <- moss's")
-        self.assertEqual(2, words['moss'][0], "2 forms collapsed to 1: moss <- moss's")
+        size_of_words(words)
+        """
+        words = {'a': [1, '(in top 100)', '', 1],
+                 'two': [1, '(in top 100)', '', 2],
+                 'dot': [1, '', '', 3],
+                 'ten': [1, '(from 100 to 1000)', '', 4],
+                 'objectification': [1, '', '', 5]}
+        expected_sizes = {1: [['a'], 1], 3: [['two', 'dot', 'ten'], 3], 15: [['objectification'], 1]}
+        ret_sizes = count_words.size_of_words(words)
+        self.assertCountEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
+
+    def test_get_words_by_indexes(self):
+        """
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
+        """
+        list_words = ['one', 'two', 'three']
+        words_to_add = set()
+
+        # 1 - words added
+        indexes_to_add = {2, 3}
+        # expected_words = [word for e, word in enumerate(list_words, 1) if e in indexes_to_add]  # Not readable...
+        expected_words = ['two', 'three']
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)
+        self.assertCountEqual(expected_words, words_to_add,
+                              f'Expected: {len(expected_words)} words added: {expected_words}')
+
+        # 2 - out of range (0 not in range: 1, 2, 3)
+        indexes_to_add = {0}
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)
+        self.assertCountEqual(expected_words, words_to_add, f'Expected: nothing added')
+
+    """
+    add_to_base(base, str_elements, words=None)
+    Launch next functions:
+    get_words_by_indexes
+    word_in_base
+    write_to_base
+    """
+
+    """
+    main()
+    Starting point
+    """
+
+    def test_get_sorted_list_from_base(self):
+        """
+        count_words.get_sorted_list_from_base(base, first_letters):
+
+        Kind of integration test: write/read file system.
+        """
+        base = 'l1'
+        files = (['hello', 'hi'], ['goodbye'], ['bye'])
+
+        base_dir = os.path.join(count_words.SCRIPT_DIR, 'db/txt', base)
+        file_paths = []
+        all_words = []
+        for file in files:
+            file_name = file[0][0] + '.txt'
+            file_path = os.path.join(base_dir, file_name)
+            file_paths.append(file_path)
+            with open(file_path, 'w') as f:
+                for word in file:
+                    all_words.append(word)
+                    f.write(word + '\n')
+
+        try:
+            # 1 - all words
+            expected_sorted_words = sorted(all_words)
+            sorted_words_from_base = count_words.get_sorted_list_from_base(base)
+            self.assertListEqual(expected_sorted_words, sorted_words_from_base)
+
+            # 2 - by first letters
+            first_letters = 'he'
+            expected_sorted_words = ['hello']
+            sorted_words_from_base = count_words.get_sorted_list_from_base(base, first_letters='he')
+            self.assertListEqual(expected_sorted_words, sorted_words_from_base)
+        finally:
+            for file in file_paths:
+                os.remove(file)
+
+    """
+    print_base(base, first_letters='')
+    get_sorted_list_from_base
+    print statements
+    """
 
     def test_write_read_base(self):
         """count_words.write_to_base, count_words.word_in_base"""
         word_for_test = 'hello'
-        count_words.write_to_base('l1', word_for_test)
-        ret = count_words.word_in_base('l1', word_for_test)
-        self.assertTrue(ret, f'"{word_for_test}" is not found in base')
+        file_to_remove_after = os.path.join(count_words.SCRIPT_DIR, 'db/txt/l1', 'h.txt')
+        try:
+            count_words.write_to_base('l1', word_for_test)
+            ret = count_words.word_in_base('l1', word_for_test)
+            self.assertTrue(ret, f'"{word_for_test}" is not found in base')
+        finally:
+            os.remove(file_to_remove_after)
+
+    def test_rem_from_txt(self):
+        """
+        count_words.rem_from_txt(base, word):
+
+        Kind of integration test: write/read file system.
+        """
+        base = 'l1'
+        words_in_file = ['hello', 'hi']
+        base_dir = os.path.join(count_words.SCRIPT_DIR, 'db/txt', base)
+        file_name = words_in_file[0][0] + '.txt'
+        file_path = os.path.join(base_dir, file_name)
+        with open(file_path, 'w') as f:
+            for word in words_in_file:
+                f.write(word + '\n')
+
+        try:
+            word_to_remove = 'hello'
+            expected_after_remove = 'hi'
+            ret_word = count_words.rem_from_txt(base, word_to_remove)
+            self.assertEqual(word_to_remove, ret_word, f'Expected removed word: {word_to_remove}')
+
+            with open(file_path, 'r') as f:
+                after_remove = f.read()
+            self.assertEqual(expected_after_remove, after_remove.replace('\n', ''),
+                             f'Expected after remove: {expected_after_remove}')
+        finally:
+            os.remove(file_path)
+
+    """
+    rem_words(base, str_words)
+    launch test_rem_from_txt for word in words
+    """
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -217,4 +366,4 @@ class UT(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(buffer=True)
