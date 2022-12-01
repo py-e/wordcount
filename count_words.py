@@ -251,6 +251,14 @@ def write_to_base(base, word):
     print(f'{word}, added to ({base})')
 
 
+def get_words_by_indexes(indexes_to_add, list_words, words_to_add):
+    for i in indexes_to_add:
+        try:
+            words_to_add.add(list_words[i-1])
+        except IndexError:
+            print(f'{i} - is out of range')
+
+
 def add_to_base(base, str_elements, words=None):
     elements = str_elements.split()
     indexes_to_add = set()
@@ -264,11 +272,7 @@ def add_to_base(base, str_elements, words=None):
     if indexes_to_add:
         if words:
             list_words = list(words)
-            for i in indexes_to_add:
-                try:
-                    words_to_add.add(list_words[i - 1])
-                except IndexError:
-                    print(f'{i} - is out of range')
+            get_words_by_indexes(indexes_to_add, list_words, words_to_add)
         else:
             print(f'seems a digit: {indexes_to_add}')
 
@@ -316,7 +320,7 @@ def main():
             print('Command is not recognized')
 
 
-def print_base(base, first_letters=''):
+def get_sorted_list_from_base(base, first_letters=''):
     if first_letters:
         stripped_fl = first_letters.strip()
         db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{stripped_fl[0]}.txt')
@@ -330,7 +334,12 @@ def print_base(base, first_letters=''):
         list_from_txt = get_words_from_txt(base)
 
     list_from_txt.sort()
-    for e, word in enumerate(list_from_txt, 1):
+    return list_from_txt
+
+
+def print_base(base, first_letters=''):
+    sorted_words_from_base = get_sorted_list_from_base(base, first_letters)
+    for e, word in enumerate(sorted_words_from_base, 1):
         print(e, word)
 
 
