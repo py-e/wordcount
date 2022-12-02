@@ -13,6 +13,26 @@ class UT(unittest.TestCase):
     First approach: launch evident tests for every function as test_<function_name>.
     """
 
+    @staticmethod
+    def create_txt(base, files):
+        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
+        all_words = []
+        file_paths = []
+        for file in files:
+            file_name = file[0][0] + '.txt'
+            file_path = os.path.join(base_dir, file_name)
+            file_paths.append(file_path)
+            with open(file_path, 'w') as f:
+                for word in file:
+                    all_words.append(word)
+                    f.write(word + '\n')
+        return all_words, file_paths
+
+    @staticmethod
+    def remove_txt(file_paths):
+        for file in file_paths:
+            os.remove(file)
+
     @classmethod
     def setUpClass(cls) -> None:
         # For test launches: relocate SCRIPT_DIR from root to /tests
@@ -132,28 +152,16 @@ class UT(unittest.TestCase):
 
         Kind of integration test: write/read file system.
         Write files (c.txt, v.txt) to l2 dir.
-        Check that all words from l2 base returned by the function.
+        Check that all words from l2 base returned by the tested function.
         """
         base = 'l2'
-        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
         files = (['cell', 'cadmium'], ['velocity'])
-        file_paths = []
-        all_words = []
-        for file in files:
-            file_name = file[0][0]+'.txt'
-            file_path = os.path.join(base_dir, file_name)
-            file_paths.append(file_path)
-            with open(file_path, 'w') as f:
-                for word in file:
-                    all_words.append(word)
-                    f.write(word+'\n')
-
+        all_words, file_paths = UT.create_txt(base, files)
         try:
-            ret = count_words.get_words_from_txt('l2')
+            ret = count_words.get_words_from_txt(base)
             self.assertCountEqual(all_words, ret, f'Expected words from the base: {all_words}')
         finally:
-            for file in file_paths:
-                os.remove(file)
+            UT.remove_txt(file_paths)
 
     def test_count_words(self):
         """
@@ -172,11 +180,8 @@ class UT(unittest.TestCase):
                          word4['variants'][2], word3['variants'][2], word4['variants'][3], not_words[1]])
 
         base = 'l2'
-        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
-        file_name = word2['word'][0] + '.txt'
-        file_path = os.path.join(base_dir, file_name)
-        with open(file_path, 'w') as f:
-            f.write(word2['word'] + '\n')
+        files = ([word2['word']],)
+        _, file_paths = UT.create_txt(base, files)
 
         expected_words_counter = {word3['word']: [3, '(from 100 to 1000)', '', ''],
                                   word4['word']: [4, '(from 100 to 1000)', '', ''],
@@ -186,7 +191,7 @@ class UT(unittest.TestCase):
             self.assertCountEqual(expected_words_counter, ret_words_counter, f'Expected: {expected_words_counter}')
             self.assertCountEqual(not_words, ret_not_words, f'Expected: {not_words}')
         finally:
-            os.remove(file_path)
+            UT.remove_txt(file_paths)
 
     """
     recount_variants(words, variants)
@@ -285,19 +290,7 @@ class UT(unittest.TestCase):
         """
         base = 'l1'
         files = (['hello', 'hi'], ['goodbye'], ['bye'])
-
-        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
-        file_paths = []
-        all_words = []
-        for file in files:
-            file_name = file[0][0] + '.txt'
-            file_path = os.path.join(base_dir, file_name)
-            file_paths.append(file_path)
-            with open(file_path, 'w') as f:
-                for word in file:
-                    all_words.append(word)
-                    f.write(word + '\n')
-
+        all_words, file_paths = UT.create_txt(base, files)
         try:
             # 1 - all words
             expected_sorted_words = sorted(all_words)
@@ -307,11 +300,10 @@ class UT(unittest.TestCase):
             # 2 - by first letters
             first_letters = 'he'
             expected_sorted_words = ['hello']
-            sorted_words_from_base = count_words.get_sorted_list_from_base(base, first_letters='he')
+            sorted_words_from_base = count_words.get_sorted_list_from_base(base, first_letters=first_letters)
             self.assertListEqual(expected_sorted_words, sorted_words_from_base)
         finally:
-            for file in file_paths:
-                os.remove(file)
+            UT.remove_txt(file_paths)
 
     """
     print_base(base, first_letters='')
@@ -338,26 +330,21 @@ class UT(unittest.TestCase):
         Kind of integration test: write/read file system.
         """
         base = 'l1'
-        words_in_file = ['hello', 'hi']
-        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
-        file_name = words_in_file[0][0] + '.txt'
-        file_path = os.path.join(base_dir, file_name)
-        with open(file_path, 'w') as f:
-            for word in words_in_file:
-                f.write(word + '\n')
-
+        files = (['hello', 'hi'],)
+        _, file_paths = UT.create_txt(base, files)
         try:
             word_to_remove = 'hello'
-            expected_after_remove = 'hi'
             ret_word = count_words.rem_from_txt(base, word_to_remove)
             self.assertEqual(word_to_remove, ret_word, f'Expected removed word: {word_to_remove}')
 
-            with open(file_path, 'r') as f:
-                after_remove = f.read()
-            self.assertEqual(expected_after_remove, after_remove.replace('\n', ''),
-                             f'Expected after remove: {expected_after_remove}')
+            expected_after_remove = 'hi'
+            for file_path in file_paths:
+                with open(file_path, 'r') as f:
+                    after_remove = f.read()
+                self.assertEqual(expected_after_remove, after_remove.replace('\n', ''),
+                                 f'Expected after remove: {expected_after_remove}')
         finally:
-            os.remove(file_path)
+            UT.remove_txt(file_paths)
 
     """
     rem_words(base, str_words)
