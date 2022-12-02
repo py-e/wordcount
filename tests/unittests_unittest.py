@@ -17,11 +17,14 @@ class UT(unittest.TestCase):
     def setUpClass(cls) -> None:
         # For test launches: relocate SCRIPT_DIR from root to /tests
         count_words.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+        count_words.PATH_TO_BASE = os.path.join(count_words.SCRIPT_DIR, 'db', 'txt')
         # Create db hierarchy in /tests
-        for d in ('db', 'db/txt', 'db/txt/l1', 'db/txt/l2'):
-            cls.dir_path = os.path.join(count_words.SCRIPT_DIR, d)
-            if not os.path.isdir(cls.dir_path):
-                os.mkdir(cls.dir_path)
+        for dirs in (('db',), ('db', 'txt'), ('db', 'txt', 'l1'), ('db', 'txt', 'l2')):
+            path_now = count_words.SCRIPT_DIR
+            for d in dirs:
+                path_now = os.path.join(path_now, d)
+            if not os.path.isdir(path_now):
+                os.mkdir(path_now)
 
     def test_read_text(self):
         """count_words.get_text()
@@ -131,13 +134,14 @@ class UT(unittest.TestCase):
         Write files (c.txt, v.txt) to l2 dir.
         Check that all words from l2 base returned by the function.
         """
-        l2_base_dir = __class__.dir_path
+        base = 'l2'
+        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
         files = (['cell', 'cadmium'], ['velocity'])
         file_paths = []
         all_words = []
         for file in files:
             file_name = file[0][0]+'.txt'
-            file_path = os.path.join(l2_base_dir, file_name)
+            file_path = os.path.join(base_dir, file_name)
             file_paths.append(file_path)
             with open(file_path, 'w') as f:
                 for word in file:
@@ -167,9 +171,10 @@ class UT(unittest.TestCase):
                          word2['variants'][0], word3['variants'][1], word2['variants'][1],
                          word4['variants'][2], word3['variants'][2], word4['variants'][3], not_words[1]])
 
-        l2_base_dir = __class__.dir_path
+        base = 'l2'
+        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
         file_name = word2['word'][0] + '.txt'
-        file_path = os.path.join(l2_base_dir, file_name)
+        file_path = os.path.join(base_dir, file_name)
         with open(file_path, 'w') as f:
             f.write(word2['word'] + '\n')
 
@@ -281,7 +286,7 @@ class UT(unittest.TestCase):
         base = 'l1'
         files = (['hello', 'hi'], ['goodbye'], ['bye'])
 
-        base_dir = os.path.join(count_words.SCRIPT_DIR, 'db/txt', base)
+        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
         file_paths = []
         all_words = []
         for file in files:
@@ -316,11 +321,12 @@ class UT(unittest.TestCase):
 
     def test_write_read_base(self):
         """count_words.write_to_base, count_words.word_in_base"""
+        base = 'l1'
         word_for_test = 'hello'
-        file_to_remove_after = os.path.join(count_words.SCRIPT_DIR, 'db/txt/l1', 'h.txt')
+        file_to_remove_after = os.path.join(count_words.PATH_TO_BASE, base, 'h.txt')
         try:
-            count_words.write_to_base('l1', word_for_test)
-            ret = count_words.word_in_base('l1', word_for_test)
+            count_words.write_to_base(base, word_for_test)
+            ret = count_words.word_in_base(base, word_for_test)
             self.assertTrue(ret, f'"{word_for_test}" is not found in base')
         finally:
             os.remove(file_to_remove_after)
@@ -333,7 +339,7 @@ class UT(unittest.TestCase):
         """
         base = 'l1'
         words_in_file = ['hello', 'hi']
-        base_dir = os.path.join(count_words.SCRIPT_DIR, 'db/txt', base)
+        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
         file_name = words_in_file[0][0] + '.txt'
         file_path = os.path.join(base_dir, file_name)
         with open(file_path, 'w') as f:

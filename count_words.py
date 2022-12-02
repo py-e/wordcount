@@ -19,10 +19,13 @@ arg_parser.add_argument('-e', '--edit_base', action='store_true', help='edit lis
 args = arg_parser.parse_args()
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-for d in ('db', 'db/txt', 'db/txt/l1', 'db/txt/l2'):
-    dir_path = os.path.join(SCRIPT_DIR, d)
-    if not os.path.isdir(dir_path):
-        os.mkdir(dir_path)
+for dirs in (('db',), ('db', 'txt'), ('db', 'txt', 'l1'), ('db', 'txt', 'l2')):
+    path_now = SCRIPT_DIR
+    for d in dirs:
+        path_now = os.path.join(path_now, d)
+    if not os.path.isdir(path_now):
+        os.mkdir(path_now)
+PATH_TO_BASE = os.path.join(SCRIPT_DIR, 'db', 'txt')
 
 
 def get_text():
@@ -140,7 +143,7 @@ def add_to_counter(w, words_counter, l1, l2):
 
 
 def get_words_from_txt(base):
-    db_txt_files = glob.glob(os.path.join(SCRIPT_DIR, f'db/txt/{base}/[a-z].txt'))
+    db_txt_files = glob.glob(os.path.join(PATH_TO_BASE, base, '[a-z].txt'))
     list_from_txt = []
     for file in db_txt_files:
         with open(file) as f:
@@ -246,7 +249,7 @@ def size_of_words(words):
 
 
 def write_to_base(base, word):
-    with open(os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt'), 'a+') as f:
+    with open(os.path.join(PATH_TO_BASE, base, word[0] + '.txt'), 'a+') as f:
         f.write(word+'\n')
     print(f'{word}, added to ({base})')
 
@@ -323,8 +326,7 @@ def main():
 def get_sorted_list_from_base(base, first_letters=''):
     if first_letters:
         stripped_fl = first_letters.strip()
-        db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{stripped_fl[0]}.txt')
-        print(db_txt_file)
+        db_txt_file = os.path.join(PATH_TO_BASE, base, stripped_fl[0] + '.txt')
         list_from_txt = []
         with open(db_txt_file) as f:
             for line in f:
@@ -345,7 +347,7 @@ def print_base(base, first_letters=''):
 
 def word_in_base(base, word):
     try:
-        db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt')
+        db_txt_file = os.path.join(PATH_TO_BASE, base, word[0] + '.txt')
         with open(db_txt_file) as f:
             if word+'\n' in f:
                 print(f'{word}, found in ({base})')
@@ -356,7 +358,7 @@ def word_in_base(base, word):
 
 
 def rem_from_txt(base, word):
-    db_txt_file = os.path.join(SCRIPT_DIR, f'db/txt/{base}/{word[0]}.txt')
+    db_txt_file = os.path.join(PATH_TO_BASE, base, word[0] + '.txt')
     lines = []
     removed = None
     word_found_in_txt = False
