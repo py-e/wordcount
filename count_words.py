@@ -7,17 +7,6 @@ from words_dicts import top_100_english_words, from100_to1000_basic_words
 TOP100 = '(in top 100)'
 TOP1000 = '(from 100 to 1000)'
 
-arg_parser = argparse.ArgumentParser(description='Count number of words in a text. '
-                                                 'Detect words from top 100 and top 1000 lists.')
-arg_parser.add_argument('-f', '--file', action='store', type=str, help='path to text file')
-arg_parser.add_argument('-t100', '--top100_hide', action='store_true', help='do not print top 100 words')
-arg_parser.add_argument('-t1000', '--top1000_hide', action='store_true', help='do not print top 1000 words')
-arg_parser.add_argument('-l1', '--list1', action='store_true', help='do not print words from l1 list')
-arg_parser.add_argument('-l2', '--list2', action='store_true', help='do not print words from l2 list')
-arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='print words length statistic')
-arg_parser.add_argument('-e', '--edit_base', action='store_true', help='edit list of words in l1 and l2 bases')
-args = arg_parser.parse_args()
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 for dirs in (('db',), ('db', 'txt'), ('db', 'txt', 'l1'), ('db', 'txt', 'l2')):
     path_now = SCRIPT_DIR
@@ -28,9 +17,8 @@ for dirs in (('db',), ('db', 'txt'), ('db', 'txt', 'l1'), ('db', 'txt', 'l2')):
 PATH_TO_BASE = os.path.join(SCRIPT_DIR, 'db', 'txt')
 
 
-def get_text():
-    if args.file:
-        user_path = args.file
+def get_text(user_path=None):
+    if user_path:
         while 1:
             try:
                 with open(user_path, encoding='utf-8') as f:
@@ -294,7 +282,8 @@ def add_to_base(base, str_elements, words=None):
 
 
 def main():
-    words, not_words = count_words(get_text())
+    text = get_text(args.file)
+    words, not_words = count_words(text)
     count_forms(words)
     count_apostrophes(words)
     print_totals(words)
@@ -414,6 +403,17 @@ def edit_base():
 
 
 if __name__ == '__main__':
+    arg_parser = argparse.ArgumentParser(description='Count number of words in a text. '
+                                                     'Detect words from top 100 and top 1000 lists.')
+    arg_parser.add_argument('-f', '--file', action='store', type=str, help='path to text file')
+    arg_parser.add_argument('-t100', '--top100_hide', action='store_true', help='do not print top 100 words')
+    arg_parser.add_argument('-t1000', '--top1000_hide', action='store_true', help='do not print top 1000 words')
+    arg_parser.add_argument('-l1', '--list1', action='store_true', help='do not print words from l1 list')
+    arg_parser.add_argument('-l2', '--list2', action='store_true', help='do not print words from l2 list')
+    arg_parser.add_argument('-s', '--size_of_words', action='store_true', help='print words length statistic')
+    arg_parser.add_argument('-e', '--edit_base', action='store_true', help='edit list of words in l1 and l2 bases')
+    args = arg_parser.parse_args()
+
     if args.edit_base:
         edit_base()
     else:

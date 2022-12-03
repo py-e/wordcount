@@ -61,8 +61,7 @@ class UT(unittest.TestCase):
             f.write(words_to_write)
 
         try:
-            count_words.args.file = temp_file
-            ret = count_words.get_text()
+            ret = count_words.get_text(temp_file)
             ret_list = ret.split()
             self.assertEqual(words_number, len(ret_list), f'Should be {words_number} words')
         finally:
