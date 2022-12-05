@@ -2,8 +2,9 @@ import sys
 import os
 import shutil
 import unittest
+from unittest.mock import patch, mock_open
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import count_words
 
 
@@ -181,9 +182,101 @@ class UT(unittest.TestCase):
     """
 
 
-class UTWriteRead(unittest.TestCase):
+class UTMockReadTxt(unittest.TestCase):
     """
     Unit tests draft.
+    First approach: launch evident tests for every function as test_<function_name>.
+    Test suite with mocking read file functionality.
+    """
+
+    def test_mock_read_text(self):
+        """count_words.get_text()"""
+        mock_file_content = """hello unit test
+
+                and more
+                """
+        fake_file_path = 'some/mock/path'
+        with patch('count_words.open',
+                   new=mock_open(read_data=mock_file_content)) as _file:
+            ret = count_words.get_text(fake_file_path)
+            _file.assert_called_once_with(fake_file_path, encoding='utf-8')
+
+        expected_list_of_words = mock_file_content.split()
+        # expected_list_of_words.append('opened')
+        ret_list_of_words = ret.split()
+        self.assertListEqual(expected_list_of_words, ret_list_of_words,
+                             f'\nExpected words from file: {expected_list_of_words}')
+
+    @patch('count_words.glob.glob', return_value=['path/to/c.txt'])
+    def test_mock_get_words_from_txt(self, mock_glob):
+        """
+        count_words.get_words_from_txt(base)
+
+        Check that all words from l2 base returned by the tested function.
+        """
+        base = 'l2'
+        all_words = ['cell', 'cadmium']
+        mock_file_content = 'cell\ncadmium\n'
+        file_path = 'path/to/c.txt'
+
+        with patch('count_words.open',
+                   new=mock_open(read_data=mock_file_content)) as _file:
+            ret = count_words.get_words_from_txt(base)
+            _file.assert_called_once_with(file_path)
+
+        self.assertCountEqual(all_words, ret, f'\nExpected words from the base: {all_words}')
+
+    @staticmethod
+    # https://gist.github.com/adammartinez271828/137ae25d0b817da2509c1a96ba37fc56
+    def multi_mock_open(*file_contents):
+        """Create a mock "open" that will mock open multiple files in sequence
+        Args:
+            *file_contents ([str]): a list of file contents to be returned by open
+        Returns:
+            (MagicMock) a mock opener that will return the contents of the first
+                file when opened the first time, the second file when opened the
+                second time, etc.
+        """
+        mock_files = [mock_open(read_data=content).return_value for content in file_contents]
+        mock_opener = mock_open()
+        mock_opener.side_effect = mock_files
+
+        return mock_opener
+
+    def test_mock_get_words_from_2_txt_files(self):
+        """
+        count_words.get_words_from_txt(base)
+
+        Check that all words from l2 base returned by the tested function.
+        """
+        base = 'l2'
+        files = (['cell', 'cadmium'], ['velocity'])
+
+        base_dir = os.path.join(count_words.PATH_TO_BASE, base)
+        input_words = []
+        expected_words = []
+        file_paths = []
+        for file in files:
+            file_name = file[0][0] + '.txt'
+            file_path = os.path.join(base_dir, file_name)
+            file_paths.append(file_path)
+            words_in_file = ''
+            for word in file:
+                words_in_file += word+'\n'
+                expected_words.append(word)
+            input_words.append(words_in_file)
+
+        with patch('count_words.glob.glob', return_value=file_paths):
+            with patch('count_words.open',
+                       new=UTMockReadTxt.multi_mock_open(*input_words)) as _file:
+                ret = count_words.get_words_from_txt(base)
+
+        self.assertCountEqual(expected_words, ret, f'\nExpected words from the base: {expected_words}')
+
+
+class IntegrationTestsWriteRead(unittest.TestCase):
+    """
+    Integration tests draft.
     First approach: launch evident tests for every function as test_<function_name>.
     Test suite with file write/read functionality.
     """
@@ -227,44 +320,6 @@ class UTWriteRead(unittest.TestCase):
         if os.path.isdir(dir_path):
             shutil.rmtree(dir_path)
 
-    def test_read_text(self):
-        """count_words.get_text()
-
-        Kind of integration test: write/read file system.
-        """
-        temp_file = os.path.join(count_words.SCRIPT_DIR, '_temp_text.txt')
-        words_to_write = """hello unit test
-
-        and more
-        """
-        words_number = len(words_to_write.split())
-        with open(temp_file, 'w') as f:
-            f.write(words_to_write)
-
-        try:
-            ret = count_words.get_text(temp_file)
-            ret_list = ret.split()
-            self.assertEqual(words_number, len(ret_list), f'Should be {words_number} words')
-        finally:
-            os.remove(temp_file)
-
-    def test_get_words_from_txt(self):
-        """
-        count_words.get_words_from_txt(base)
-
-        Kind of integration test: write/read file system.
-        Write files (c.txt, v.txt) to l2 dir.
-        Check that all words from l2 base returned by the tested function.
-        """
-        base = 'l2'
-        files = (['cell', 'cadmium'], ['velocity'])
-        all_words, file_paths = UTWriteRead.create_txt(base, files)
-        try:
-            ret = count_words.get_words_from_txt(base)
-            self.assertCountEqual(all_words, ret, f'Expected words from the base: {all_words}')
-        finally:
-            UTWriteRead.remove_txt(file_paths)
-
     def test_count_words(self):
         """
         count_words.count_words(text)
@@ -283,7 +338,7 @@ class UTWriteRead(unittest.TestCase):
 
         base = 'l2'
         files = ([word2['word']],)
-        _, file_paths = UTWriteRead.create_txt(base, files)
+        _, file_paths = IntegrationTestsWriteRead.create_txt(base, files)
 
         expected_words_counter = {word3['word']: [3, '(from 100 to 1000)', '', ''],
                                   word4['word']: [4, '(from 100 to 1000)', '', ''],
@@ -293,7 +348,7 @@ class UTWriteRead(unittest.TestCase):
             self.assertCountEqual(expected_words_counter, ret_words_counter, f'Expected: {expected_words_counter}')
             self.assertCountEqual(not_words, ret_not_words, f'Expected: {not_words}')
         finally:
-            UTWriteRead.remove_txt(file_paths)
+            IntegrationTestsWriteRead.remove_txt(file_paths)
 
     def test_get_sorted_list_from_base(self):
         """
@@ -303,7 +358,7 @@ class UTWriteRead(unittest.TestCase):
         """
         base = 'l1'
         files = (['hello', 'hi'], ['goodbye'], ['bye'])
-        all_words, file_paths = UTWriteRead.create_txt(base, files)
+        all_words, file_paths = IntegrationTestsWriteRead.create_txt(base, files)
         try:
             # 1 - all words
             expected_sorted_words = sorted(all_words)
@@ -316,7 +371,7 @@ class UTWriteRead(unittest.TestCase):
             sorted_words_from_base = count_words.get_sorted_list_from_base(base, first_letters=first_letters)
             self.assertListEqual(expected_sorted_words, sorted_words_from_base)
         finally:
-            UTWriteRead.remove_txt(file_paths)
+            IntegrationTestsWriteRead.remove_txt(file_paths)
 
     """
     print_base(base, first_letters='')
@@ -344,7 +399,7 @@ class UTWriteRead(unittest.TestCase):
         """
         base = 'l1'
         files = (['hello', 'hi'],)
-        _, file_paths = UTWriteRead.create_txt(base, files)
+        _, file_paths = IntegrationTestsWriteRead.create_txt(base, files)
         try:
             word_to_remove = 'hello'
             ret_word = count_words.rem_from_txt(base, word_to_remove)
@@ -357,7 +412,7 @@ class UTWriteRead(unittest.TestCase):
                 self.assertEqual(expected_after_remove, after_remove.replace('\n', ''),
                                  f'Expected after remove: {expected_after_remove}')
         finally:
-            UTWriteRead.remove_txt(file_paths)
+            IntegrationTestsWriteRead.remove_txt(file_paths)
 
     """
     rem_words(base, str_words)
