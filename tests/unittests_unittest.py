@@ -21,12 +21,56 @@ class UT(unittest.TestCase):
         ret = count_words.cleanup_beginning(word_to_cleanup)
         self.assertEqual(word, ret, f'"{word}" is expected after cleanup')
 
+    def test_cleanup_beginning_2(self):
+        """count_words.cleanup_beginning(word)
+        Clean word"""
+        word = 'recursion'
+        ret = count_words.cleanup_beginning(word)
+        self.assertEqual(word, ret, f'The same clean "{word}" is expected after cleanup')
+
+    def test_cleanup_beginning_3(self):
+        """count_words.cleanup_beginning(word)
+        Symbol inside (not at the beginning)"""
+        word = 'recur-sion'
+        ret = count_words.cleanup_beginning(word)
+        self.assertEqual(word, ret, f'Not changed "{word}" is expected after cleanup')
+
+    def test_cleanup_beginning_4(self):
+        """count_words.cleanup_beginning(word)
+        Symbol at the end (not at the beginning)"""
+        word = 'recursion'
+        word_to_cleanup = word+'-#7;'
+        ret = count_words.cleanup_beginning(word_to_cleanup)
+        self.assertEqual(word_to_cleanup, ret, f'"{word_to_cleanup}" not clean at the end is expected after cleanup')
+
     def test_cleanup_end(self):
         """count_words.cleanup_end(word)"""
         word = 'recursion'
         word_to_cleanup = word+'-#7;'
         ret = count_words.cleanup_end(word_to_cleanup)
         self.assertEqual(word, ret, f'"{word}" is expected after cleanup')
+
+    def test_cleanup_end_2(self):
+        """count_words.cleanup_end(word)
+        Clean word"""
+        word = 'recursion'
+        ret = count_words.cleanup_end(word)
+        self.assertEqual(word, ret, f'The same clean "{word}" is expected after cleanup')
+
+    def test_cleanup_end_3(self):
+        """count_words.cleanup_end(word)
+        Symbol inside (not at the end)"""
+        word = 'recur-sion'
+        ret = count_words.cleanup_end(word)
+        self.assertEqual(word, ret, f'Not changed "{word}" is expected after cleanup')
+
+    def test_cleanup_end_4(self):
+        """count_words.cleanup_end(word)
+        Symbol at the beginning (not at the end)"""
+        word = 'recursion'
+        word_to_cleanup = '-15:'+word
+        ret = count_words.cleanup_end(word_to_cleanup)
+        self.assertEqual(word_to_cleanup, ret, f'"{word_to_cleanup}" not clean at the beginning is expected after cleanup')
 
     def test_cleanup_word(self):
         """count_words.cleanup_word(word)
@@ -43,16 +87,14 @@ class UT(unittest.TestCase):
     print statements
     """
 
-    def test_sort_and_exclude(self):
-        """count_words.sort_and_exclude(words, exclude=None)
-
-        Sort by frequency
+    def sort_and_exclude_helper(self):
+        """
         Data format:  key: word; value: [frequency, list, variants, index]
         """
-        def check_results():
+        def check_results(expected_order, ret_sorted_words):
             for e, key in enumerate(ret_sorted_words):
                 self.assertEqual(expected_order[e], key, f'Expected: {expected_order[e]}')
-                self.assertEqual(e+1, ret_sorted_words[key][3], f'Expected index: {e+1}')
+                self.assertEqual(e + 1, ret_sorted_words[key][3], f'Expected index: {e + 1}')
 
         words = {'one':     [1, '(in top 100)', '', ''],
                  'ten':     [10, '(from 100 to 1000)', '', ''],
@@ -60,16 +102,95 @@ class UT(unittest.TestCase):
                  'two':     [2, '(in top 100)', '', ''],
                  'eighty':  [80, '(l1)', '', ''],
                  'twice':   [2, '(from 100 to 1000)', '', '']}
+        return words, check_results
 
-        # 1 - Sort only
+    def test_sort_and_exclude(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) only
+        """
+        words, check_results = self.sort_and_exclude_helper()
         expected_order = ['eighty', 'fifteen', 'ten', 'two', 'twice', 'one']
         ret_sorted_words = count_words.sort_and_exclude(words)
-        check_results()
+        check_results(expected_order, ret_sorted_words)
 
-        # 2 - Sort & exclude
+    def test_sort_and_exclude_2(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) & exclude
+        """
+        words, check_results = self.sort_and_exclude_helper()
         expected_order = ['fifteen', 'ten', 'twice']
         ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'])
-        check_results()
+        check_results(expected_order, ret_sorted_words)
+
+    def test_sort_and_exclude_3_no_words(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) only
+        No words - return empty dict
+        """
+        words = {}
+        ret_sorted_words = count_words.sort_and_exclude(words)
+        self.assertEqual(words, ret_sorted_words, f'Expected: empty dict')
+
+    def test_sort_and_exclude_4_no_words(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) & exclude
+        No words - return empty dict
+        """
+        words = {}
+        ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'])
+        self.assertEqual(words, ret_sorted_words, f'Expected: empty dict')
+
+    def test_sort_and_exclude_5_wrong_type(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) only
+        int instead of str (word)
+        """
+        words = {1: [1, '', '', '']}
+        ret_sorted_words = count_words.sort_and_exclude(words)
+        self.assertEqual(words, ret_sorted_words, f'Expected: int returned')
+
+    def test_sort_and_exclude_6_wrong_type(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) only
+        int instead of list
+        """
+        words = {'word': 1}
+        try:
+            ret_sorted_words = count_words.sort_and_exclude(words)
+        except TypeError as e:
+            exc_message = e
+        finally:
+            self.assertEqual("'int' object is not subscriptable", exc_message.args[0],
+                             f'Expected: TypeError (int instead of list)')
+
+    def test_sort_and_exclude_7_wrong_exclude(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) & exclude
+        Wrong (not existing) exclude value
+        """
+        words = {'word': [1, '', '', ''], 'and': [5, '', '', '']}
+        expected_order = ['and', 'word']
+        ret_sorted_words = count_words.sort_and_exclude(words, ['(no such value)'])
+        self.assertListEqual(expected_order, list(ret_sorted_words))
+
+    def test_sort_and_exclude_8_wrong_signature(self):
+        """count_words.sort_and_exclude(words, exclude=None)
+
+        Sort (by frequency) & exclude
+        Wrong signature
+        """
+        words = {'word': [1, '', '', '']}
+        try:
+            ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'], 'unexpected value')
+        except TypeError as e:
+            self.assertEqual('sort_and_exclude() takes from 1 to 2 positional arguments but 3 were given', e.args[0])
 
     """
     print_sorted_by_number(words)
@@ -79,18 +200,48 @@ class UT(unittest.TestCase):
     def test_add_to_counter(self):
         """
         count_words.add_to_counter(w, words_counter, l1, l2)
+        Add once (word in list)
         """
-        word3 = 'word'
-        word2 = 'test'
-        word1 = 'prerequisite'
-        l1 = [word3, word2, 'debug']
-        l2 = [word1, 'snippet']
+        word = 'word'
+        l1 = [word, 'test', 'debug']
+        l2 = ['prerequisite', 'snippet']
         words_counter = {}
-        for word in (word3, word1, word3, word2, word3, word2):
-            count_words.add_to_counter(word, words_counter, l1, l2)
-        self.assertEqual(3, words_counter[word3][0], f'"{word3}" was added three times')
-        self.assertEqual(2, words_counter[word2][0], f'"{word2}" was added two times')
-        self.assertEqual(1, words_counter[word1][0], f'"{word1}" was added once')
+        count_words.add_to_counter(word, words_counter, l1, l2)
+        self.assertEqual(1, words_counter[word][0], f'"{word}" was added once')
+        for key in words_counter:
+            self.assertEqual(word, key, f'"{word}" was added')
+            self.assertEqual('(from 100 to 1000)', words_counter[key][1], 'Expect: word in list')
+
+    def test_add_to_counter_2(self):
+        """
+        count_words.add_to_counter(w, words_counter, l1, l2)
+        Add two times (word in list)
+        """
+        word = 'word'
+        l1 = [word, 'test', 'debug']
+        l2 = ['prerequisite', 'snippet']
+        words_counter = {}
+        count_words.add_to_counter(word, words_counter, l1, l2)
+        count_words.add_to_counter(word, words_counter, l1, l2)
+        self.assertEqual(2, words_counter[word][0], f'"{word}" was added two times')
+        for key in words_counter:
+            self.assertEqual(word, key, f'"{word}" was added')
+            self.assertEqual('(from 100 to 1000)', words_counter[key][1], 'Expect: word in list')
+
+    def test_add_to_counter_3(self):
+        """
+        count_words.add_to_counter(w, words_counter, l1, l2)
+        Add once (word NOT in list)
+        """
+        word = 'wordnotinlist'
+        l1 = ['test', 'debug']
+        l2 = ['prerequisite', 'snippet']
+        words_counter = {}
+        count_words.add_to_counter(word, words_counter, l1, l2)
+        self.assertEqual(1, words_counter[word][0], f'"{word}" was added once')
+        for key in words_counter:
+            self.assertEqual(word, key, f'"{word}" was added')
+            self.assertEqual('', words_counter[key][1], 'Expect: word out of lists')
 
     """
     recount_variants(words, variants)
@@ -100,17 +251,19 @@ class UT(unittest.TestCase):
     def test_count_apostrophes(self):
         """
         count_words.count_apostrophes(words)
+        Kind of integration test: count_apostrophes launches recount_variants
 
         Checking ending: "'s"
         """
         words = {'moss': [1, '', '', ''], "moss's": [1, '', '', '']}
         count_words.count_apostrophes(words)
         self.assertEqual(1, len(words), "2 forms collapsed to 1: moss <- moss's")
-        self.assertEqual(2, words['moss'][0], "2 forms collapsed to 1: moss <- moss's")
+        self.assertEqual(2, words['moss'][0], "2 - is expected number for: moss")
 
     def test_count_forms(self):
         """
         count_words.count_forms(words)
+        Kind of integration test: count_forms launches recount_variants
 
         Checking endings: 's', 'es', 'ed', 'd', 'ing'
         """
@@ -118,17 +271,17 @@ class UT(unittest.TestCase):
                  'wording': [1, '', '', '']}
         count_words.count_forms(words)
         self.assertEqual(1, len(words), '4 forms collapsed to 1: word <- words, worded, wording')
-        self.assertEqual(4, words['word'][0], '4 forms collapsed to 1: word <- words, worded, wording')
+        self.assertEqual(4, words['word'][0], '4 - is expected number for: word')
 
         words = {'moss': [1, '', '', ''], 'mosses': [1, '', '', '']}
         count_words.count_forms(words)
         self.assertEqual(1, len(words), '2 forms collapsed to 1: moss <- mosses')
-        self.assertEqual(2, words['moss'][0], '2 forms collapsed to 1: moss <- mosses')
+        self.assertEqual(2, words['moss'][0], '2 - is expected number for: moss <- mosses')
 
         words = {'observe': [1, '', '', ''], 'observed': [1, '', '', '']}
         count_words.count_forms(words)
         self.assertEqual(1, len(words), '2 forms collapsed to 1: observe <- observed')
-        self.assertEqual(2, words['observe'][0], '2 forms collapsed to 1: observe <- observed')
+        self.assertEqual(2, words['observe'][0], '2 - is expected number for: observe')
 
     """
     print_sizes(sizes)
@@ -137,25 +290,59 @@ class UT(unittest.TestCase):
 
     def test_size_of_words(self):
         """
-        size_of_words(words)
+        count_words.size_of_words(words)
+        Simple test: one word counted
+        """
+        words = {'a': [1, '(in top 100)', '', 1]}
+        expected_sizes = {1: [['a'], 1]}
+        ret_sizes = count_words.size_of_words(words)
+        self.assertEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
+
+    def test_size_of_words_2(self):
+        """
+        count_words.size_of_words(words)
+        Check that two words of the same size (3) counted
+        """
+        words = {'dot': [2, '', '', 1],
+                 'ten': [1, '(from 100 to 1000)', '', 2]}
+        expected_sizes = {3: [['dot', 'ten'], 2]}
+        ret_sizes = count_words.size_of_words(words)
+        self.assertEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
+
+    def test_size_of_words_3(self):
+        """
+        count_words.size_of_words(words)
+        Check that two words of the different size are counted
         """
         words = {'a': [1, '(in top 100)', '', 1],
-                 'two': [1, '(in top 100)', '', 2],
-                 'dot': [1, '', '', 3],
-                 'ten': [1, '(from 100 to 1000)', '', 4],
-                 'objectification': [1, '', '', 5]}
-        expected_sizes = {1: [['a'], 1], 3: [['two', 'dot', 'ten'], 3], 15: [['objectification'], 1]}
+                 'objectification': [1, '', '', 2]}
+        expected_sizes = {1: [['a'], 1], 15: [['objectification'], 1]}
         ret_sizes = count_words.size_of_words(words)
-        self.assertCountEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
+        self.assertEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
 
     def test_get_words_by_indexes(self):
         """
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
+        Adding word by index (2 from list_words) to the set of words (words_to_add)
         """
         list_words = ['one', 'two', 'three']
         words_to_add = set()
 
-        # 1 - words added
+        indexes_to_add = {2}
+        # expected_words = [word for e, word in enumerate(list_words, 1) if e in indexes_to_add]  # Not readable...
+        expected_words = ['two']
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)
+        self.assertCountEqual(expected_words, words_to_add,
+                              f'Expected word is added: {expected_words}')
+
+    def test_get_words_by_indexes_2(self):
+        """
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
+        Adding words by multiple indexes (2, 3 from list_words) to the set of words (words_to_add)
+        """
+        list_words = ['one', 'two', 'three']
+        words_to_add = set()
+
         indexes_to_add = {2, 3}
         # expected_words = [word for e, word in enumerate(list_words, 1) if e in indexes_to_add]  # Not readable...
         expected_words = ['two', 'three']
@@ -163,10 +350,29 @@ class UT(unittest.TestCase):
         self.assertCountEqual(expected_words, words_to_add,
                               f'Expected: {len(expected_words)} words added: {expected_words}')
 
-        # 2 - out of range (0 not in range: 1, 2, 3)
+    def test_get_words_by_indexes_3(self):
+        """
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
+        Trying to add word, but index is out of range (0 not in range: 1, 2, 3)
+        """
+        list_words = ['one', 'two', 'three']
+        words_to_add = set()
+
         indexes_to_add = {0}
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)
-        self.assertCountEqual(expected_words, words_to_add, f'Expected: nothing added')
+        self.assertFalse(words_to_add, f'Expected: nothing added')
+
+    def test_get_words_by_indexes_4(self):
+        """
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
+        Trying to add word while index is not int
+        """
+        list_words = ['one', 'two', 'three']
+        words_to_add = set()
+
+        indexes_to_add = {0.5}
+        count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)
+        self.assertFalse(words_to_add, f'Expected: nothing added')
 
     """
     add_to_base(base, str_elements, words=None)
@@ -352,7 +558,7 @@ class IntegrationTestsWriteRead(unittest.TestCase):
 
     def test_get_sorted_list_from_base(self):
         """
-        count_words.get_sorted_list_from_base(base, first_letters):
+        count_words.get_sorted_list_from_base(base, first_letters)
 
         Kind of integration test: write/read file system.
         """
@@ -380,7 +586,12 @@ class IntegrationTestsWriteRead(unittest.TestCase):
     """
 
     def test_write_read_base(self):
-        """count_words.write_to_base, count_words.word_in_base"""
+        """
+        count_words.write_to_base(base, word_for_test)
+        count_words.word_in_base(base, word_for_test)
+
+        Kind of integration test: write/read file system.
+        """
         base = 'l1'
         word_for_test = 'hello'
         file_to_remove_after = os.path.join(count_words.PATH_TO_BASE, base, 'h.txt')
@@ -393,7 +604,7 @@ class IntegrationTestsWriteRead(unittest.TestCase):
 
     def test_rem_from_txt(self):
         """
-        count_words.rem_from_txt(base, word):
+        count_words.rem_from_txt(base, word)
 
         Kind of integration test: write/read file system.
         """
