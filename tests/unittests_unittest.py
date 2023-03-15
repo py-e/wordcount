@@ -14,28 +14,28 @@ class UT(unittest.TestCase):
     First approach: launch evident tests for every function as test_<function_name>.
     """
 
-    def test_cleanup_beginning(self):
+    def test_cleanupWordBeginning(self):
         """count_words.cleanup_beginning(word)"""
         word = 'recursion'
         word_to_cleanup = '-15:'+word
         ret = count_words.cleanup_beginning(word_to_cleanup)
         self.assertEqual(word, ret, f'"{word}" is expected after cleanup')
 
-    def test_cleanup_beginning_2(self):
+    def test_cleanupWordBeginning_clean_word(self):
         """count_words.cleanup_beginning(word)
         Clean word"""
         word = 'recursion'
         ret = count_words.cleanup_beginning(word)
         self.assertEqual(word, ret, f'The same clean "{word}" is expected after cleanup')
 
-    def test_cleanup_beginning_3(self):
+    def test_cleanupWordBeginning_symbol_inside(self):
         """count_words.cleanup_beginning(word)
         Symbol inside (not at the beginning)"""
         word = 'recur-sion'
         ret = count_words.cleanup_beginning(word)
         self.assertEqual(word, ret, f'Not changed "{word}" is expected after cleanup')
 
-    def test_cleanup_beginning_4(self):
+    def test_cleanupWordBeginning_symbol_at_the_end(self):
         """count_words.cleanup_beginning(word)
         Symbol at the end (not at the beginning)"""
         word = 'recursion'
@@ -43,28 +43,28 @@ class UT(unittest.TestCase):
         ret = count_words.cleanup_beginning(word_to_cleanup)
         self.assertEqual(word_to_cleanup, ret, f'"{word_to_cleanup}" not clean at the end is expected after cleanup')
 
-    def test_cleanup_end(self):
+    def test_cleanupWordEnd(self):
         """count_words.cleanup_end(word)"""
         word = 'recursion'
         word_to_cleanup = word+'-#7;'
         ret = count_words.cleanup_end(word_to_cleanup)
         self.assertEqual(word, ret, f'"{word}" is expected after cleanup')
 
-    def test_cleanup_end_2(self):
+    def test_cleanupWordEnd_clean_word(self):
         """count_words.cleanup_end(word)
         Clean word"""
         word = 'recursion'
         ret = count_words.cleanup_end(word)
         self.assertEqual(word, ret, f'The same clean "{word}" is expected after cleanup')
 
-    def test_cleanup_end_3(self):
+    def test_cleanupWordEnd_symbol_inside(self):
         """count_words.cleanup_end(word)
         Symbol inside (not at the end)"""
         word = 'recur-sion'
         ret = count_words.cleanup_end(word)
         self.assertEqual(word, ret, f'Not changed "{word}" is expected after cleanup')
 
-    def test_cleanup_end_4(self):
+    def test_cleanupWordEnd_symbol_at_the_end(self):
         """count_words.cleanup_end(word)
         Symbol at the beginning (not at the end)"""
         word = 'recursion'
@@ -104,7 +104,7 @@ class UT(unittest.TestCase):
                  'twice':   [2, '(from 100 to 1000)', '', '']}
         return words, check_results
 
-    def test_sort_and_exclude(self):
+    def test_dataSortAndExclude_sort_only(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) only
@@ -114,7 +114,7 @@ class UT(unittest.TestCase):
         ret_sorted_words = count_words.sort_and_exclude(words)
         check_results(expected_order, ret_sorted_words)
 
-    def test_sort_and_exclude_2(self):
+    def test_dataSortAndExclude_sort_and_exclude(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) & exclude
@@ -124,7 +124,7 @@ class UT(unittest.TestCase):
         ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'])
         check_results(expected_order, ret_sorted_words)
 
-    def test_sort_and_exclude_3_no_words(self):
+    def test_dataSortAndExclude_sort_only_empty(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) only
@@ -134,7 +134,7 @@ class UT(unittest.TestCase):
         ret_sorted_words = count_words.sort_and_exclude(words)
         self.assertEqual(words, ret_sorted_words, f'Expected: empty dict')
 
-    def test_sort_and_exclude_4_no_words(self):
+    def test_dataSortAndExclude_sort_and_exclude_empty(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) & exclude
@@ -144,7 +144,7 @@ class UT(unittest.TestCase):
         ret_sorted_words = count_words.sort_and_exclude(words, ['(in top 100)', '(l1)'])
         self.assertEqual(words, ret_sorted_words, f'Expected: empty dict')
 
-    def test_sort_and_exclude_5_wrong_type(self):
+    def test_dataSortAndExclude_sort_only_wrong_type_int_instead_str(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) only
@@ -154,7 +154,7 @@ class UT(unittest.TestCase):
         ret_sorted_words = count_words.sort_and_exclude(words)
         self.assertEqual(words, ret_sorted_words, f'Expected: int returned')
 
-    def test_sort_and_exclude_6_wrong_type(self):
+    def test_dataSortAndExclude_sort_only_wrong_type_int_instead_list(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) only
@@ -169,7 +169,7 @@ class UT(unittest.TestCase):
             self.assertEqual("'int' object is not subscriptable", exc_message.args[0],
                              f'Expected: TypeError (int instead of list)')
 
-    def test_sort_and_exclude_7_wrong_exclude(self):
+    def test_dataSortAndExclude_wrong_exclude_value(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) & exclude
@@ -180,7 +180,7 @@ class UT(unittest.TestCase):
         ret_sorted_words = count_words.sort_and_exclude(words, ['(no such value)'])
         self.assertListEqual(expected_order, list(ret_sorted_words))
 
-    def test_sort_and_exclude_8_wrong_signature(self):
+    def test_dataSortAndExclude_wrong_signature(self):
         """count_words.sort_and_exclude(words, exclude=None)
 
         Sort (by frequency) & exclude
@@ -197,7 +197,7 @@ class UT(unittest.TestCase):
     Launch sort_and_exclude and print results
     """
 
-    def test_add_to_counter(self):
+    def test_countWord_from_top1000_once(self):
         """
         count_words.add_to_counter(w, words_counter, l1, l2)
         Add once (word in list)
@@ -212,7 +212,7 @@ class UT(unittest.TestCase):
             self.assertEqual(word, key, f'"{word}" was added')
             self.assertEqual('(from 100 to 1000)', words_counter[key][1], 'Expect: word in list')
 
-    def test_add_to_counter_2(self):
+    def test_countWord_from_top1000_twice(self):
         """
         count_words.add_to_counter(w, words_counter, l1, l2)
         Add two times (word in list)
@@ -228,7 +228,7 @@ class UT(unittest.TestCase):
             self.assertEqual(word, key, f'"{word}" was added')
             self.assertEqual('(from 100 to 1000)', words_counter[key][1], 'Expect: word in list')
 
-    def test_add_to_counter_3(self):
+    def test_countWord_once(self):
         """
         count_words.add_to_counter(w, words_counter, l1, l2)
         Add once (word NOT in list)
@@ -288,7 +288,7 @@ class UT(unittest.TestCase):
     print statements
     """
 
-    def test_size_of_words(self):
+    def test_sizeOfWords_1_word_1_symbol(self):
         """
         count_words.size_of_words(words)
         Simple test: one word counted
@@ -298,7 +298,7 @@ class UT(unittest.TestCase):
         ret_sizes = count_words.size_of_words(words)
         self.assertEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
 
-    def test_size_of_words_2(self):
+    def test_sizeOfWords_2_words_3_symbols_each(self):
         """
         count_words.size_of_words(words)
         Check that two words of the same size (3) counted
@@ -309,7 +309,7 @@ class UT(unittest.TestCase):
         ret_sizes = count_words.size_of_words(words)
         self.assertEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
 
-    def test_size_of_words_3(self):
+    def test_sizeOfWords_2_words_1_and_15_symbols(self):
         """
         count_words.size_of_words(words)
         Check that two words of the different size are counted
@@ -320,7 +320,7 @@ class UT(unittest.TestCase):
         ret_sizes = count_words.size_of_words(words)
         self.assertEqual(expected_sizes, ret_sizes, f'Expected: {expected_sizes}')
 
-    def test_get_words_by_indexes(self):
+    def test_findWordInDataStructureByIndex_one_word(self):
         """
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
         Adding word by index (2 from list_words) to the set of words (words_to_add)
@@ -335,7 +335,7 @@ class UT(unittest.TestCase):
         self.assertCountEqual(expected_words, words_to_add,
                               f'Expected word is added: {expected_words}')
 
-    def test_get_words_by_indexes_2(self):
+    def test_findWordInDataStructureByIndex_two_words(self):
         """
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
         Adding words by multiple indexes (2, 3 from list_words) to the set of words (words_to_add)
@@ -350,7 +350,7 @@ class UT(unittest.TestCase):
         self.assertCountEqual(expected_words, words_to_add,
                               f'Expected: {len(expected_words)} words added: {expected_words}')
 
-    def test_get_words_by_indexes_3(self):
+    def test_findWordInDataStructureByIndex_index_out_of_range(self):
         """
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
         Trying to add word, but index is out of range (0 not in range: 1, 2, 3)
@@ -362,7 +362,7 @@ class UT(unittest.TestCase):
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)
         self.assertFalse(words_to_add, f'Expected: nothing added')
 
-    def test_get_words_by_indexes_4(self):
+    def test_findWordInDataStructureByIndex_index_not_int(self):
         """
         count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add):
         Trying to add word while index is not int
@@ -395,7 +395,7 @@ class UTMockReadTxt(unittest.TestCase):
     Test suite with mocking read file functionality.
     """
 
-    def test_mock_read_text(self):
+    def test_mock_read_text_from_file(self):
         """count_words.get_text()"""
         mock_file_content = """hello unit test
 
