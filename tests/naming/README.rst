@@ -1,8 +1,8 @@
 Naming unit tests
 -------
-The intent of a unit test should be clear, so we can use human readable naming schema where the test name describes what we want to test.
-Test cases can be grouped into Test Groups or Test Suites.
-Let's group our tests by CamelCase naming (to distinguish from other words describing the test), one group is related to one function.
+ | The intent of a unit test should be clear, so we can use human readable naming schema where the test name describes what we want to test.
+ | Test cases can be grouped into Test Groups or Test Suites.
+ | Let's group our tests by CamelCase naming (to distinguish from other words describing the test), one group is related to one function.
 
 Example, tests for cleanup_beginning function which remove symbols (not letters) only at the beginning of the word, like '("robots' -> 'robots':
 
