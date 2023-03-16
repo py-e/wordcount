@@ -244,10 +244,15 @@ def write_to_base(base, word):
 
 def get_words_by_indexes(indexes_to_add, list_words, words_to_add):
     for i in indexes_to_add:
-        try:
-            words_to_add.add(list_words[i-1])
-        except IndexError:
-            print(f'{i} - is out of range')
+        if i > 0:
+            try:
+                words_to_add.add(list_words[i-1])
+            except IndexError:
+                print(f'{i} - is out of range')
+            except TypeError:
+                print(f'{i} - should be int')
+        else:
+            print(f'{i} - is less than one')
 
 
 def add_to_base(base, str_elements, words=None):
