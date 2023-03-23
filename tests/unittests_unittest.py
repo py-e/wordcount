@@ -10,8 +10,8 @@ import count_words
 
 class UT(unittest.TestCase):
     """
-    Unit tests draft.
-    First approach: launch evident tests for every function as test_<function_name>.
+    Unit tests suite.
+    Test cases for the functions in count_words.py.
     """
 
     def test_cleanupWordBeginning(self):
@@ -390,9 +390,8 @@ class UT(unittest.TestCase):
 
 class UTMockReadTxt(unittest.TestCase):
     """
-    Unit tests draft.
-    First approach: launch evident tests for every function as test_<function_name>.
-    Test suite with mocking read file functionality.
+    Unit tests suite with mocking read file functionality.
+    Test cases for the functions (with data read from file) in count_words.py.
     """
 
     def test_mock_read_text_from_file(self):
