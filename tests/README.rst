@@ -1,10 +1,12 @@
 Unit Tests
 -------
 
+.. role:: grey
+
 In this branch initial test cases were:
- | - Mocked, to isolate from external dependencies (reading/writing file system in our case).  To make test cases independent (deterministic) and run really fast.
- | - Splitted, one test is for one thing only (when the test fails, no debugging is needed to locate the problem).
- | - Named expressly, human readable naming schema help to understand the purpose of the test case just at glance, tests grouped by naming convention.
+ | - Mocked, to isolate from external dependencies (reading/writing file system in our case).  To make test cases independent (deterministic) and run really fast. :grey:`(Check mocking/README.rst for more details)`
+ | - Splitted, one test is for one thing only (when the test fails, no debugging is needed to locate the problem). :grey:`(Check splitting/README.rst for more details)`
+ | - Named expressly, human readable naming schema help to understand the purpose of the test case just at glance, tests grouped by naming convention. :grey:`(Check naming/README.rst for more details)`
 
 
 
