@@ -1,5 +1,6 @@
 import sys
 import os
+import io
 import shutil
 import unittest
 
@@ -7,11 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import count_words
 
 
-class ITWriteRead(unittest.TestCase):
-    """
-    Tests functions with file write/read functionality.
-    """
-
+class SetupsIT(unittest.TestCase):
     @staticmethod
     def create_txt(base, files):
         base_dir = os.path.join(count_words.PATH_TO_BASE, base)
@@ -27,10 +24,12 @@ class ITWriteRead(unittest.TestCase):
                     f.write(word + '\n')
         return all_words, file_paths
 
+
     @staticmethod
     def remove_txt(file_paths):
         for file in file_paths:
             os.remove(file)
+
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -45,11 +44,24 @@ class ITWriteRead(unittest.TestCase):
             if not os.path.isdir(path_now):
                 os.mkdir(path_now)
 
+
     @classmethod
     def tearDownClass(cls) -> None:
         dir_path = os.path.join(count_words.SCRIPT_DIR, 'db')
         if os.path.isdir(dir_path):
             shutil.rmtree(dir_path)
+
+        # Reset stdout redirect
+        sys.stdout = sys.__stdout__
+        # Applied at the class level (was set at the method level)
+        # Test level issue for reset: if test is failed, unittest need to get sys.stdout.getvalue()
+        # No attribute 'getvalue' in '_io.TextIOWrapper' object (sys.__stdout__)
+
+
+class ITWriteRead(SetupsIT):
+    """
+    Tests functions with file write/read functionality.
+    """
 
     def test_count_words(self):
         """
@@ -68,7 +80,7 @@ class ITWriteRead(unittest.TestCase):
 
         base = 'l2'
         files = ([word2['word']],)
-        _, file_paths = ITWriteRead.create_txt(base, files)
+        _, file_paths = SetupsIT.create_txt(base, files)
 
         expected_words_counter = {word3['word']: [3, '(from 100 to 1000)', '', ''],
                                   word4['word']: [4, '(from 100 to 1000)', '', ''],
@@ -78,7 +90,7 @@ class ITWriteRead(unittest.TestCase):
             self.assertCountEqual(expected_words_counter, ret_words_counter, f'Expected: {expected_words_counter}')
             self.assertCountEqual(not_words, ret_not_words, f'Expected: {not_words}')
         finally:
-            ITWriteRead.remove_txt(file_paths)
+            SetupsIT.remove_txt(file_paths)
 
     def test_get_sorted_list_from_base(self):
         """
@@ -88,7 +100,7 @@ class ITWriteRead(unittest.TestCase):
         """
         base = 'l1'
         files = (['hello', 'hi'], ['goodbye'], ['bye'])
-        all_words, file_paths = ITWriteRead.create_txt(base, files)
+        all_words, file_paths = SetupsIT.create_txt(base, files)
         try:
             # 1 - all words
             expected_sorted_words = sorted(all_words)
@@ -101,7 +113,7 @@ class ITWriteRead(unittest.TestCase):
             sorted_words_from_base = count_words.get_sorted_list_from_base(base, first_letters=first_letters)
             self.assertListEqual(expected_sorted_words, sorted_words_from_base)
         finally:
-            ITWriteRead.remove_txt(file_paths)
+            SetupsIT.remove_txt(file_paths)
 
     """
     print_base(base, first_letters='')
@@ -134,7 +146,7 @@ class ITWriteRead(unittest.TestCase):
         """
         base = 'l1'
         files = (['hello', 'hi', 'hyphen'],)
-        _, file_paths = ITWriteRead.create_txt(base, files)
+        _, file_paths = SetupsIT.create_txt(base, files)
         try:
             word_to_remove = files[0][1]    # 'hi'
             ret_word = count_words.rem_from_txt(base, word_to_remove)
@@ -147,12 +159,100 @@ class ITWriteRead(unittest.TestCase):
                 self.assertEqual(expected_after_remove, after_remove.replace('\n', ''),
                                  f'Expected after remove: {expected_after_remove}')
         finally:
-            ITWriteRead.remove_txt(file_paths)
+            SetupsIT.remove_txt(file_paths)
 
     """
     rem_words(base, str_words)
     launch test_rem_from_txt for word in words
     """
+
+
+class ITEditBase(SetupsIT):
+    """
+    Integration tests suite.
+    Interfaces between functions for actions:
+    - get data from the base
+    - add data to the base
+    - remove data from the base
+    """
+
+    captured_output = ''
+    input_counter = [0]
+
+    def mock_input_l1_q(self, inp_message, counter=input_counter):
+        """
+        To override input two times: 'l1' (print l1 base) and 'q' (quit).
+        Capture print output after 'l1' command.
+        """
+        counter[0] += 1
+        if counter[0] == 1:
+            self.captured_output = io.StringIO()
+            sys.stdout = self.captured_output        # Redirect stdout
+            return 'l1'
+        elif counter[0] == 2:
+            return 'q'
+
+    def test_print_base_one_word(self):
+        """
+        Add one word to the base
+        edit_base() -> print_base('l1')
+        Check that content of the base is printed correct
+        """
+        self.input_counter[0] = 0
+        count_words.input = self.mock_input_l1_q
+        base = 'l1'
+        files = (('word',),)
+        expected_val = '1 word'
+        _, file_paths = SetupsIT.create_txt(base, files)
+        count_words.edit_base()
+        captured_val = self.captured_output.getvalue()
+        captured_val = captured_val.replace('\n', '')
+        try:
+            self.assertEqual(expected_val, captured_val, f'Expected: {expected_val}')
+        finally:
+            SetupsIT.remove_txt(file_paths)
+
+    def test_print_base_many_words(self):
+        """
+        Add three words to the base (two files)
+        edit_base() -> print_base('l1')
+        Check that content of the base is printed correct
+        """
+        self.input_counter[0] = 0
+        count_words.input = self.mock_input_l1_q
+        base = 'l1'
+        files = (('word', 'world'), ('sword',))
+
+        list_of_words = [w for f in files for w in f]
+        list_of_words.sort()
+        numbered_list_of_words = [str(e) + ' ' + l for e, l in enumerate(list_of_words, 1)]
+        expected_val = ''.join(numbered_list_of_words)  # like: '1 sword2 word3 world'
+
+        _, file_paths = SetupsIT.create_txt(base, files)
+        count_words.edit_base()
+        captured_val = self.captured_output.getvalue()
+        captured_val = captured_val.replace('\n', '')
+        print(captured_val)
+        try:
+            self.assertEqual(expected_val, captured_val, f'Expected: {expected_val}')
+        finally:
+            SetupsIT.remove_txt(file_paths)
+
+    def test_print_base_empty(self):
+        """
+        No words in the base
+        edit_base() -> print_base('l1')
+        Check that nothing is printed, no errors
+        """
+        self.input_counter[0] = 0
+        count_words.input = self.mock_input_l1_q
+        base = 'l1'
+        expected_val = ''
+        count_words.edit_base()
+        captured_val = self.captured_output.getvalue()
+        captured_val = captured_val.replace('\n', '')
+        print(captured_val)
+        self.assertEqual(expected_val, captured_val, f'Expected: no print')
 
 
 if __name__ == '__main__':
