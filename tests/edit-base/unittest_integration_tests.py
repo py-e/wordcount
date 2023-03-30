@@ -215,6 +215,14 @@ class ITEditBase(SetupsIT):
         captured_val = captured_val.replace('\n', '')
         self.assertEqual(expected_val, captured_val, f'Expected: {expected_val}')
 
+    def launch_and_assert_list(self, expected_list):
+        count_words.edit_base()
+        captured_val = self.captured_output.getvalue()
+        captured_list = captured_val.split('\n')
+        captured_list = list(filter(None, captured_list))
+        # self.assertEqual(expected_list, captured_list, f'Expected: {expected_list}')
+        self.assertCountEqual(expected_list, captured_list, f'Expected: {expected_list}')
+
     # Test cases: get data from the base (print base)
 
     def test_print_base_one_word(self):
@@ -328,6 +336,22 @@ class ITEditBase(SetupsIT):
         self.set_base((('frame', 'frost'),))
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'{word}, added to ({self.base})')
+
+    def test_add_words(self):
+        """Add new words to base. Some txt files (first letter) exist, and some not.
+        edit_base(); add_to_base('l1', 'cake sweetie caramel candy', words=None); write_to_base('l1', 'sweetie')"""
+        words = 'cake sweetie caramel candy workshop'
+        words_expected = [f'cake, already in (from 100 to 1000)',
+                          f'sweetie, added to ({self.base})',
+                          f'caramel, added to ({self.base})',
+                          f'candy, added to ({self.base})',
+                          f'workshop, found in ({self.base})']
+        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:cake sweetie caramel candy)
+        # THEN correct message is printed: <word added>
+        self.set_base((('workload', 'workshop'), ('software',)))
+        self.input_command = self.base+' add:'+words
+        self.launch_and_assert_list(expected_list=words_expected)
 
     def test_add_existing_word(self):
         """Add word to base, but this word already in the base
