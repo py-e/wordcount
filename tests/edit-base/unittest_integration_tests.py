@@ -29,6 +29,14 @@ class SetupsIT(unittest.TestCase):
         for file in file_paths:
             os.remove(file)
 
+    @staticmethod
+    def remove_all_txt():
+        paths_to_bases = (os.path.join(count_words.PATH_TO_BASE, 'l1'),
+                          os.path.join(count_words.PATH_TO_BASE, 'l2'))
+        for path in paths_to_bases:
+            shutil.rmtree(path)
+            os.mkdir(path)
+
     @classmethod
     def setUpClass(cls) -> None:
         # For test launches: relocate SCRIPT_DIR from root to /tests
@@ -181,6 +189,13 @@ class ITEditBase(SetupsIT):
         self.input_counter[0] = 0
         count_words.input = self.mock_input
 
+    def tearDown(self):
+        SetupsIT.remove_all_txt()
+
+    def set_base(self, files):
+        _, file_paths = SetupsIT.create_txt(self.base, files)
+        return file_paths
+
     def mock_input(self, inp_message, counter=input_counter):
         """
         To override input two times: command (like 'l1') and 'q' (quit).
@@ -194,131 +209,168 @@ class ITEditBase(SetupsIT):
         elif counter[0] == 2:
             return 'q'
 
-    def launch_and_assert(self, expected_val, files=None):
-        if files:
-            _, file_paths = SetupsIT.create_txt(self.base, files)
-        try:
-            count_words.edit_base()
-            captured_val = self.captured_output.getvalue()
-            captured_val = captured_val.replace('\n', '')
-            self.assertEqual(expected_val, captured_val, f'Expected: {expected_val}')
-        finally:
-            if files:
-                SetupsIT.remove_txt(file_paths)
+    def launch_and_assert(self, expected_val):
+        count_words.edit_base()
+        captured_val = self.captured_output.getvalue()
+        captured_val = captured_val.replace('\n', '')
+        self.assertEqual(expected_val, captured_val, f'Expected: {expected_val}')
+
+    # Test cases: get data from the base (print base)
 
     def test_print_base_one_word(self):
-        """
-        Add one word to the base
-        edit_base() -> print_base('l1') (get_sorted_list_from_base('l1', ''), get_words_from_txt('l1'))
-        Check that content of the base is printed correct
-        """
+        """Print base with one word
+        edit_base(); print_base('l1'); get_sorted_list_from_base('l1', ''); get_words_from_txt('l1')"""
+        # GIVEN one word (word) in the base AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name> (l1)
+        # THEN correct data is printed: <num word> (1 word)
+        self.set_base((('word',),))
         self.input_command = self.base
-        files = (('word',),)
-        expected_val = '1 word'
-        self.launch_and_assert(expected_val, files)
+        self.launch_and_assert(expected_val='1 word')
 
     def test_print_base_many_words(self):
-        """
-        Add three words to the base (two files)
-        edit_base() -> print_base('l1') (get_sorted_list_from_base('l1', ''), get_words_from_txt('l1'))
-        Check that content of the base is printed correct
-        """
+        """Print base: three words (two files)
+        edit_base(); print_base('l1'); get_sorted_list_from_base('l1', ''); get_words_from_txt('l1')"""
+        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name> (l1)
+        # THEN correct data is printed: 3 items <num word> sorted alphabetically
+        self.set_base((('word', 'world'), ('sword',)))
         self.input_command = self.base
-        files = (('word', 'world'), ('sword',))
-
-        list_of_words = [w for f in files for w in f]
-        list_of_words.sort()
-        numbered_list_of_words = [str(e) + ' ' + l for e, l in enumerate(list_of_words, 1)]
-        expected_val = ''.join(numbered_list_of_words)  # like: '1 sword2 word3 world'
-
-        self.launch_and_assert(expected_val, files)
+        self.launch_and_assert(expected_val='1 sword2 word3 world')
 
     def test_print_base_empty(self):
-        """
-        No words in the base
-        edit_base() -> print_base('l1') (get_sorted_list_from_base('l1', ''), get_words_from_txt('l1'))
-        Check the message (base is empty), no errors
-        """
+        """Print empty base
+        edit_base(); print_base('l1'); get_sorted_list_from_base('l1', ''); get_words_from_txt('l1')"""
+        # GIVEN base is empty AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name> (l1)
+        # THEN correct data is printed: correct message, no errors
         self.input_command = self.base
-        expected_val = f'Base {self.base} is empty for now'
-        self.launch_and_assert(expected_val)
+        self.launch_and_assert(expected_val=f'Base {self.base} is empty for now')
 
     def test_print_base_by_letter(self):
-        """
-        Add three words to the base (two files)
-        Send the command with the first letter (w)
-        edit_base() -> print_base('l1', 'w') (get_sorted_list_from_base('l1', 'w'))
-        Check that content of the base is printed correct (only words starting with w)
-        """
+        """Print words starting with letter (two such words from three in 2 files)
+        edit_base(); print_base('l1', 'w'); get_sorted_list_from_base('l1', 'w')"""
+        # GIVEN three words in the base (files: w.txt - 2, s.txt - 1) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name:letter> (l1:w)
+        # THEN correct data is printed: 2 items <num word> starting with the letter (w)
+        self.set_base((('word', 'world'), ('sword',)))
         self.input_command = self.base+':w'
-        files = (('word', 'world'), ('sword',))
-
-        list_of_words_1 = [w for w in files[0]]
-        list_of_words_1.sort()
-        numbered_list_of_words = [str(e) + ' ' + l for e, l in enumerate(list_of_words_1, 1)]
-        expected_val = ''.join(numbered_list_of_words)  # like: '1 word2 world'
-
-        self.launch_and_assert(expected_val, files)
+        self.launch_and_assert(expected_val='1 word2 world')
 
     def test_print_base_by_few_letters(self):
-        """
-        Add five words to the base (two files)
-        Send the command with the first three letters (woo)
-        edit_base() -> print_base('l1', 'woo') (get_sorted_list_from_base('l1', 'woo'))
-        Check that content of the base is printed correct (only words starting with woo)
-        """
-        first_letters = 'woo'
-        self.input_command = self.base+':'+first_letters
-        files = (('wolf', 'wood', 'wool', 'wrong'), ('sword',))
-
-        list_of_words_1andLet = [w for w in files[0] if w.startswith(first_letters)]
-        list_of_words_1andLet.sort()
-        numbered_list_of_words = [str(e) + ' ' + l for e, l in enumerate(list_of_words_1andLet, 1)]
-        expected_val = ''.join(numbered_list_of_words)  # like: '1 wood2 wool'
-
-        self.launch_and_assert(expected_val, files)
+        """Print words starting with some letters (two such words from five in 2 files)
+        edit_base(); print_base('l1', 'woo'); get_sorted_list_from_base('l1', 'woo')"""
+        # GIVEN five words in the base (files: w.txt - 4, s.txt - 1) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name:letters> (l1:woo)
+        # THEN correct data is printed: 2 items <num word> starting with the letters (woo)
+        self.set_base((('wolf', 'wood', 'wool', 'wrong'), ('sword',)))
+        self.input_command = self.base+':woo'
+        self.launch_and_assert(expected_val='1 wood2 wool')
 
     def test_print_base_by_letter_not_found(self):
-        """
-        Add three words to the base (two files)
-        Send the command with the first letter (f), but no such words in the base
-        edit_base() -> print_base('l1', 'f') (get_sorted_list_from_base('l1', 'f'))
-        Check that message is correct (no words)
-        """
+        """Print message: words not found (by letter)
+        edit_base(); print_base('l1', 'f'); get_sorted_list_from_base('l1', 'f')"""
+        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name:letter> (l1:f)
+        # THEN correct message is printed: <No words found>
+        self.set_base((('word', 'world'), ('sword',)))
         self.input_command = self.base+':f'
-        files = (('word', 'world'), ('sword',))
-
-        first_letter_after_colon = self.input_command.split(":")[1][0]
-        expected_val = f'No words in {self.base} starting with: {first_letter_after_colon}'
-
-        self.launch_and_assert(expected_val, files)
+        self.launch_and_assert(expected_val=f'No words in {self.base} starting with: f')
 
     def test_print_base_by_letter_wrong_symbol(self):
-        """
-        Add three words to the base (two files)
-        Send the command with the first letter, but with the number (5) instead of letter
-        edit_base() -> print_base('l1', '5') (get_sorted_list_from_base('l1', '5'))
-        Check that message is correct (no words)
-        """
+        """Print message: words not found (by non-letter character)
+        edit_base(); print_base('l1', '5'); get_sorted_list_from_base('l1', '5')"""
+        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name:letter> (l1:5)
+        # THEN correct message is printed: <No words found>, no errors
+        self.set_base((('word', 'world'), ('sword',)))
         self.input_command = self.base+':5'
-        files = (('word', 'world'), ('sword',))
-
-        first_letter_after_colon = self.input_command.split(":")[1][0]
-        expected_val = f'No words in {self.base} starting with: {first_letter_after_colon}'
-
-        self.launch_and_assert(expected_val, files)
+        self.launch_and_assert(expected_val=f'No words in {self.base} starting with: 5')
 
     def test_print_base_by_letter_second_symbol_wrong(self):
-        """
-        Add three words to the base (two files)
-        Send the command with the correct first letter (w), but next symbols are incorrect (' *')
-        edit_base() -> print_base('l1', 'w *') (get_sorted_list_from_base('l1', 'w *'))
-        Check that application is not broken (prompt appears as expected)
-        """
-        self.input_command = self.base+':w *'
-        files = (('word', 'world'), ('sword',))
-        expected_val = ''
-        self.launch_and_assert(expected_val, files)
+        """No message for case: correct first letter (w), but next symbol is not letter ('*')
+        edit_base(); print_base('l1', 'w*'); get_sorted_list_from_base('l1', 'w*')"""
+        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name:letter> (l1:w*)
+        # THEN prompt reappears: No message shown
+        self.set_base((('word', 'world'), ('sword',)))
+        self.input_command = self.base+':w*'
+        self.launch_and_assert(expected_val='')
+
+    # Test cases: add data to the base
+
+    def test_add_word_to_empty(self):
+        """Add word to empty base
+        edit_base(); add_to_base('l1', 'framework', words=None); write_to_base('l1', 'framework')"""
+        word = 'framework'
+        # GIVEN base is empty AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:framework)
+        # THEN correct message is printed: <word added>
+        self.input_command = self.base+' add:'+word
+        self.launch_and_assert(expected_val=f'{word}, added to ({self.base})')
+
+    def test_try_add_word_from_1000(self):
+        """Word from top1000 not added, message for user
+        edit_base(); add_to_base('l1', 'word', words=None)"""
+        word = 'word'
+        # GIVEN base is empty AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:word)
+        # THEN correct message is printed: <word in top1000>
+        self.input_command = self.base+' add:'+word
+        self.launch_and_assert(expected_val=f'{word}, already in (from 100 to 1000)')
+
+    def test_add_word_file_exist(self):
+        """Add new word to base, txt file (first letter) exist
+        edit_base(); add_to_base('l1', 'framework', words=None); write_to_base('l1', 'framework')"""
+        word = 'framework'
+        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:framework)
+        # THEN correct message is printed: <word added>
+        self.set_base((('frame', 'frost'),))
+        self.input_command = self.base+' add:'+word
+        self.launch_and_assert(expected_val=f'{word}, added to ({self.base})')
+
+    def test_add_existing_word(self):
+        """Add word to base, but this word already in the base
+        edit_base(); add_to_base('l1', 'frame', words=None)"""
+        word = 'frame'
+        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:frame)
+        # THEN correct message is printed: <word found in the base>
+        self.set_base((('frame', 'frost'),))
+        self.input_command = self.base+' add:'+word
+        self.launch_and_assert(expected_val=f'{word}, found in ({self.base})')
+
+    def test_add_without_data(self):
+        """Add command without any word
+        edit_base(); add_to_base('l1', '', words=None)"""
+        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:)
+        # THEN prompt reappears: No message shown
+        self.set_base((('frame', 'frost'),))
+        self.input_command = self.base+' add:'
+        self.launch_and_assert(expected_val='')
+
+    def test_try_add_number(self):
+        """Add command with number
+        edit_base(); add_to_base('l1', '5', words=None)"""
+        word = '5'
+        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:5)
+        # THEN correct message is printed: <seems a digit>
+        self.set_base((('frame', 'frost'),))
+        self.input_command = self.base+' add:'+word
+        self.launch_and_assert(expected_val=f'seems a digit: {{{word}}}')
+
+    def test_try_add_non_letter_first(self):
+        """Add command: non-letter first symbol
+        edit_base(); add_to_base('l1', '%w', words=None); is_letter_first('%w')"""
+        word = '%w'
+        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:%w)
+        # THEN correct message is printed: <skipped>
+        self.set_base((('word', 'world'), ('sword',)))
+        self.input_command = self.base+' add:'+word
+        self.launch_and_assert(expected_val=f'{word} - skipped, word should start with a letter')
 
 
 if __name__ == '__main__':
