@@ -1,6 +1,7 @@
-import sys
-import os
 import io
+import os
+import sys
+import glob
 import shutil
 import unittest
 
@@ -51,7 +52,7 @@ class SetupsIT(unittest.TestCase):
                 os.mkdir(path_now)
 
     @classmethod
-    def tearDownClass(cls) -> None:
+    def tearDownClass(cls):
         dir_path = os.path.join(count_words.SCRIPT_DIR, 'db')
         if os.path.isdir(dir_path):
             shutil.rmtree(dir_path)
@@ -196,6 +197,15 @@ class ITEditBase(SetupsIT):
         _, file_paths = SetupsIT.create_txt(self.base, files)
         return file_paths
 
+    def get_base(self):
+        db_txt_files = glob.glob(os.path.join(count_words.PATH_TO_BASE, self.base, '[a-z].txt'))
+        list_from_txt = []
+        for file in db_txt_files:
+            with open(file) as f:
+                for line in f:
+                    list_from_txt.append(line.replace('\n', ''))
+        return list_from_txt
+
     def mock_input(self, inp_message, counter=input_counter):
         """
         To override input two times: command (like 'l1') and 'q' (quit).
@@ -220,7 +230,6 @@ class ITEditBase(SetupsIT):
         captured_val = self.captured_output.getvalue()
         captured_list = captured_val.split('\n')
         captured_list = list(filter(None, captured_list))
-        # self.assertEqual(expected_list, captured_list, f'Expected: {expected_list}')
         self.assertCountEqual(expected_list, captured_list, f'Expected: {expected_list}')
 
     # Test cases: get data from the base (print base)
@@ -313,88 +322,116 @@ class ITEditBase(SetupsIT):
         # GIVEN base is empty AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:framework)
         # THEN correct message is printed: <word added>
+        # AND base contains the word
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'{word}, added to ({self.base})')
+        self.assertCountEqual((word,), self.get_base())
 
-    def test_try_add_word_from_1000(self):
+    def test_add_try_word_from_1000(self):
         """Word from top1000 not added, message for user
         edit_base(); add_to_base('l1', 'word', words=None)"""
         word = 'word'
         # GIVEN base is empty AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:word)
         # THEN correct message is printed: <word in top1000>
+        # AND base is still empty
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'{word}, already in (from 100 to 1000)')
+        self.assertCountEqual('', self.get_base())
 
     def test_add_word_file_exist(self):
         """Add new word to base, txt file (first letter) exist
         edit_base(); add_to_base('l1', 'framework', words=None); write_to_base('l1', 'framework')"""
         word = 'framework'
-        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        words_initial_base = (('frame', 'frost'),)
+        words_expected_base = [word] + [i for w in words_initial_base for i in w]   # ['framework', 'frame', 'frost']
+        # GIVEN 3 words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:framework)
         # THEN correct message is printed: <word added>
-        self.set_base((('frame', 'frost'),))
+        # AND base contains all 3 words
+        self.set_base(words_initial_base)
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'{word}, added to ({self.base})')
+        self.assertCountEqual(words_expected_base, self.get_base())
 
     def test_add_words(self):
         """Add new words to base. Some txt files (first letter) exist, and some not.
         edit_base(); add_to_base('l1', 'cake sweetie caramel candy', words=None); write_to_base('l1', 'sweetie')"""
-        words = 'cake sweetie caramel candy workshop'
-        words_expected = [f'cake, already in (from 100 to 1000)',
-                          f'sweetie, added to ({self.base})',
-                          f'caramel, added to ({self.base})',
-                          f'candy, added to ({self.base})',
-                          f'workshop, found in ({self.base})']
-        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
-        # WHEN command sent: <base_name add:word> (l1 add:cake sweetie caramel candy)
-        # THEN correct message is printed: <word added>
-        self.set_base((('workload', 'workshop'), ('software',)))
+        words = 'cake workshop sweetie caramel candy'
+        messages_expected = [f'cake, already in (from 100 to 1000)',
+                             f'workshop, found in ({self.base})',
+                             f'sweetie, added to ({self.base})',
+                             f'caramel, added to ({self.base})',
+                             f'candy, added to ({self.base})']
+        words_initial_base = (('workload', 'workshop'), ('software',))
+        words_expected_base = words.split(' ')[2:] + [i for w in words_initial_base for i in w] # ['sweetie', 'caramel', 'candy', 'workload', 'workshop', 'software']
+        # GIVEN 3 words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name add:word> (l1 add:cake workshop sweetie caramel candy)
+        # THEN correct messages are printed: <word added/already in/found in>
+        # AND base contains 6 words (3 initial & 3 added)
+        self.set_base(words_initial_base)
         self.input_command = self.base+' add:'+words
-        self.launch_and_assert_list(expected_list=words_expected)
+        self.launch_and_assert_list(expected_list=messages_expected)
+        self.assertCountEqual(words_expected_base, self.get_base())
 
     def test_add_existing_word(self):
         """Add word to base, but this word already in the base
         edit_base(); add_to_base('l1', 'frame', words=None)"""
         word = 'frame'
-        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        words_initial_base = (('frame', 'frost'),)
+        words_expected_base = [i for w in words_initial_base for i in w]    # ['frame', 'frost']
+        # GIVEN 2 words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:frame)
         # THEN correct message is printed: <word found in the base>
-        self.set_base((('frame', 'frost'),))
+        # AND base contains initial 2 words
+        self.set_base(words_initial_base)
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'{word}, found in ({self.base})')
+        self.assertCountEqual(words_expected_base, self.get_base())
 
     def test_add_without_data(self):
         """Add command without any word
         edit_base(); add_to_base('l1', '', words=None)"""
-        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        words_initial_base = (('frame', 'frost'),)
+        words_expected_base = [i for w in words_initial_base for i in w]    # ['frame', 'frost']
+        # GIVEN 2 words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:)
         # THEN prompt reappears: No message shown
-        self.set_base((('frame', 'frost'),))
+        # AND base contains initial 2 words
+        self.set_base(words_initial_base)
         self.input_command = self.base+' add:'
         self.launch_and_assert(expected_val='')
+        self.assertCountEqual(words_expected_base, self.get_base())
 
-    def test_try_add_number(self):
+    def test_add_try_number(self):
         """Add command with number
         edit_base(); add_to_base('l1', '5', words=None)"""
         word = '5'
-        # GIVEN two words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
+        words_initial_base = (('frame', 'frost'),)
+        words_expected_base = [i for w in words_initial_base for i in w]    # ['frame', 'frost']
+        # GIVEN 2 words in the base (file: f.txt) AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:5)
         # THEN correct message is printed: <seems a digit>
-        self.set_base((('frame', 'frost'),))
+        # AND base contains initial 2 words
+        self.set_base(words_initial_base)
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'seems a digit: {{{word}}}')
+        self.assertCountEqual(words_expected_base, self.get_base())
 
-    def test_try_add_non_letter_first(self):
+    def test_add_try_non_letter_first(self):
         """Add command: non-letter first symbol
         edit_base(); add_to_base('l1', '%w', words=None); is_letter_first('%w')"""
         word = '%w'
-        # GIVEN three words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
+        words_initial_base = (('word', 'world'), ('sword',))
+        words_expected_base = [i for w in words_initial_base for i in w]    # ['word', 'world', 'sword']
+        # GIVEN 3 words in the base (files: w.txt, s.txt) AND app in edit mode (start func: edit_base())
         # WHEN command sent: <base_name add:word> (l1 add:%w)
         # THEN correct message is printed: <skipped>
-        self.set_base((('word', 'world'), ('sword',)))
+        # AND base contains initial 3 words
+        self.set_base(words_initial_base)
         self.input_command = self.base+' add:'+word
         self.launch_and_assert(expected_val=f'{word} - skipped, word should start with a letter')
+        self.assertCountEqual(words_expected_base, self.get_base())
 
 
 if __name__ == '__main__':
