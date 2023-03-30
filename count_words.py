@@ -1,6 +1,7 @@
 import os
 import glob
 import argparse
+from string import ascii_letters
 
 from words_dicts import top_100_english_words, from100_to1000_basic_words
 
@@ -257,6 +258,14 @@ def get_words_by_indexes(indexes_to_add, list_words, words_to_add):
             print(f'{i} - is less than one')
 
 
+def is_letter_first(word):
+    if word[0] in ascii_letters:
+        return True
+    else:
+        print(f'{word} - skipped, word should start with a letter')
+        return False
+
+
 def add_to_base(base, str_elements, words=None):
     elements = str_elements.split()
     indexes_to_add = set()
@@ -265,7 +274,8 @@ def add_to_base(base, str_elements, words=None):
         if el.isdigit():
             indexes_to_add.add(int(el))
         else:
-            words_to_add.add(el)
+            if is_letter_first(el):
+                words_to_add.add(el)
 
     if indexes_to_add:
         if words:
