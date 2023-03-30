@@ -275,7 +275,7 @@ def add_to_base(base, str_elements, words=None):
             indexes_to_add.add(int(el))
         else:
             if is_letter_first(el):
-                words_to_add.add(el)
+                words_to_add.add(el.lower())
 
     if indexes_to_add:
         if words:
