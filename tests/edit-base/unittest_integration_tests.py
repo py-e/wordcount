@@ -433,6 +433,79 @@ class ITEditBase(SetupsIT):
         self.launch_and_assert(expected_val=f'{word} - skipped, word should start with a letter')
         self.assertCountEqual(words_expected_base, self.get_base())
 
+    # Test cases: remove data from the base
+
+    def test_remove_word(self):
+        """Remove word from the base (with one word)
+        edit_base(); rem_words('l1', 'framework'); rem_from_txt('l1', 'framework')"""
+        word = 'framework'
+        words_initial_base = (('framework',),)
+        # GIVEN 1 word in base AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name rem:word> (l1 rem:framework)
+        # THEN correct message is printed: <removed>
+        # AND base is empty now
+        self.set_base(words_initial_base)
+        self.input_command = self.base+' rem:'+word
+        self.launch_and_assert(expected_val=f'removed from ({self.base}): {word}')
+        self.assertCountEqual('', self.get_base())
+
+    def test_remove_words(self):
+        """Remove words from the base (some removed and some not found)
+        edit_base(); rem_words('l1', 'workshop software processor'); rem_from_txt('l1', 'workshop')"""
+        words = 'workshop software processor'
+        words_initial_base = (('workload', 'workshop'), ('software',))
+        messages_expected = f'processor is not found in {self.base}removed from ({self.base}): workshop, software'
+        words_expected_base = ('workload',)
+        # GIVEN 3 words in base AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name rem:words> (l1 rem:workshop software processor)
+        # THEN correct messages are printed: <not found/removed>
+        # AND 1 word in base now
+        self.set_base(words_initial_base)
+        self.input_command = self.base+' rem:'+words
+        self.launch_and_assert(expected_val=messages_expected)
+        self.assertCountEqual(words_expected_base, self.get_base())
+
+    def test_remove_try_wrong_symbol(self):
+        """Remove command: non-letter symbol
+        edit_base(); rem_words('l1', '?'); rem_from_txt('l1', '?')"""
+        word = '?'
+        words_initial_base = (('workload', 'workshop'), ('software',))
+        words_expected_base = [i for w in words_initial_base for i in w]    # ['workload', 'workshop', 'software']
+        # GIVEN 3 words in base AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name rem:words> (l1 rem:?)
+        # THEN correct messages are printed: <not found>
+        # AND base still contains all 3 words
+        self.set_base(words_initial_base)
+        self.input_command = self.base+' rem:'+word
+        self.launch_and_assert(expected_val=f'{word} is not found in {self.base}')
+        self.assertCountEqual(words_expected_base, self.get_base())
+
+    def test_remove_try_without_data(self):
+        """Remove command: without any word
+        edit_base(); rem_words('l1', '')"""
+        words_initial_base = (('workload', 'workshop'), ('software',))
+        words_expected_base = [i for w in words_initial_base for i in w]    # ['workload', 'workshop', 'software']
+        # GIVEN 3 words in base AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name rem:words> (l1 rem:)
+        # THEN prompt reappears: No message shown
+        # AND base still contains all 3 words
+        self.set_base(words_initial_base)
+        self.input_command = self.base+' rem:'
+        self.launch_and_assert(expected_val='')
+        self.assertCountEqual(words_expected_base, self.get_base())
+
+    def test_remove_try_empty_base(self):
+        """Remove command: but the base is empty
+        edit_base(); rem_words('l1', 'framework'); rem_from_txt('l1', 'framework')"""
+        word = 'framework'
+        # GIVEN no words in base AND app in edit mode (start func: edit_base())
+        # WHEN command sent: <base_name rem:words> (l1 rem:framework)
+        # THEN prompt reappears: <not found>
+        # AND base is empty
+        self.input_command = self.base+' rem:framework'
+        self.launch_and_assert(expected_val=f'{word} is not found in {self.base}')
+        self.assertCountEqual('', self.get_base())
+
 
 if __name__ == '__main__':
     unittest.main(buffer=True)
