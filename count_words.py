@@ -396,10 +396,10 @@ def rem_words(base, str_words):
     list_words = str_words.lower().split()
     removed = []
     for w in list_words:
-        removed_word = rem_from_txt(base, w)
-        removed.append(removed_word)
+        if removed_word := rem_from_txt(base, w):
+            removed.append(removed_word)
     if removed:
-        print(f'removed from ({base}): {removed}')
+        print(f"removed from ({base}): {', '.join(removed)}")
 
 
 def edit_base():
