@@ -371,11 +371,16 @@ def rem_from_txt(base, word):
     lines = []
     removed = None
     word_found_in_txt = False
-    with open(db_txt_file) as f:
-        for line in f:
-            lines.append(line)
-            if word == line.replace('\n', ''):
-                word_found_in_txt = True
+    try:
+        with open(db_txt_file) as f:
+            for line in f:
+                lines.append(line)
+                if word == line.replace('\n', ''):
+                    word_found_in_txt = True
+    except FileNotFoundError:
+        # print(f'No words in {base} starting with: {word[0]}')
+        pass
+
     if word_found_in_txt:
         with open(db_txt_file, 'w') as f:
             for line in lines:
