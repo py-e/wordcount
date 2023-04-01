@@ -1,6 +1,7 @@
 import os
 import glob
 import argparse
+from string import ascii_letters
 
 from words_dicts import top_100_english_words, from100_to1000_basic_words
 
@@ -132,6 +133,8 @@ def add_to_counter(w, words_counter, l1, l2):
 
 def get_words_from_txt(base):
     db_txt_files = glob.glob(os.path.join(PATH_TO_BASE, base, '[a-z].txt'))
+    if not db_txt_files:
+        print(f'Base {base} is empty for now')
     list_from_txt = []
     for file in db_txt_files:
         with open(file) as f:
@@ -255,6 +258,14 @@ def get_words_by_indexes(indexes_to_add, list_words, words_to_add):
             print(f'{i} - is less than one')
 
 
+def is_letter_first(word):
+    if word[0] in ascii_letters:
+        return True
+    else:
+        print(f'{word} - skipped, word should start with a letter')
+        return False
+
+
 def add_to_base(base, str_elements, words=None):
     elements = str_elements.split()
     indexes_to_add = set()
@@ -263,7 +274,8 @@ def add_to_base(base, str_elements, words=None):
         if el.isdigit():
             indexes_to_add.add(int(el))
         else:
-            words_to_add.add(el)
+            if is_letter_first(el):
+                words_to_add.add(el.lower())
 
     if indexes_to_add:
         if words:
@@ -322,10 +334,13 @@ def get_sorted_list_from_base(base, first_letters=''):
         stripped_fl = first_letters.strip()
         db_txt_file = os.path.join(PATH_TO_BASE, base, stripped_fl[0] + '.txt')
         list_from_txt = []
-        with open(db_txt_file) as f:
-            for line in f:
-                if line.startswith(stripped_fl):
-                    list_from_txt.append(line.replace('\n', ''))
+        try:
+            with open(db_txt_file) as f:
+                for line in f:
+                    if line.startswith(stripped_fl):
+                        list_from_txt.append(line.replace('\n', ''))
+        except FileNotFoundError:
+            print(f'No words in {base} starting with: {stripped_fl[0]}')
     else:
         list_from_txt = get_words_from_txt(base)
 
@@ -356,11 +371,16 @@ def rem_from_txt(base, word):
     lines = []
     removed = None
     word_found_in_txt = False
-    with open(db_txt_file) as f:
-        for line in f:
-            lines.append(line)
-            if word == line.replace('\n', ''):
-                word_found_in_txt = True
+    try:
+        with open(db_txt_file) as f:
+            for line in f:
+                lines.append(line)
+                if word == line.replace('\n', ''):
+                    word_found_in_txt = True
+    except FileNotFoundError:
+        # print(f'No words in {base} starting with: {word[0]}')
+        pass
+
     if word_found_in_txt:
         with open(db_txt_file, 'w') as f:
             for line in lines:
@@ -376,10 +396,10 @@ def rem_words(base, str_words):
     list_words = str_words.lower().split()
     removed = []
     for w in list_words:
-        removed_word = rem_from_txt(base, w)
-        removed.append(removed_word)
+        if removed_word := rem_from_txt(base, w):
+            removed.append(removed_word)
     if removed:
-        print(f'removed from ({base}): {removed}')
+        print(f"removed from ({base}): {', '.join(removed)}")
 
 
 def edit_base():
