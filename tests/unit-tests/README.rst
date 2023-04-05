@@ -1,11 +1,12 @@
 Pytest - Unit Tests
 -------
 
-| Unit tests rewritten for the pytest framework, and obvious benefits are:
-| Less code - 484 lines (unittest file) vs 282 lines (pytest file).
-| Parameterization - re-usage of one function instead of many functions.
-| Fixtures - provides the separation of "getting ready for" and "cleaning up after" code from the test functions: to focus the test on what is actually testing, not on what is necessary to get ready for the test.
+Unit tests rewritten for the pytest framework, and obvious benefits are:
 
+- Less code - 484 lines (unittest file) vs 282 lines (pytest file).
+- Parameterization - re-usage of one function instead of many functions.
+- Fixtures - provides the separation of "getting ready for" and "cleaning up after" code from the test functions: to focus the test on what is actually testing, not on what is necessary to get ready for the test.
+|
 | **Example of the parameterization.**
 | One function with parameters looks good. It's readable, new cases can be added right at the place.
 | No need to create new test functions and repeat code (launch and assert) again and again.
@@ -14,6 +15,8 @@ Pytest - Unit Tests
 .. code-block:: python
 
 	# pytest
+	# four lines with values 'send data', 'expected return data' and 'name' are self explaining
+	# at first glance you can get the idea
 	p_cleanup_beginning = (
 		pytest.param('-15:recursion', 'recursion',      id='symbol_at_the_beginning'),
 		pytest.param('recursion', 'recursion',          id='clean_word'),
@@ -27,6 +30,8 @@ Pytest - Unit Tests
 .. code-block:: python
 
     # unittest
+    # need to scroll down all four tests, look at the test name and variables
+    # need more attention to get the idea
     def test_cleanupWordBeginning(self):
         word = 'recursion'
         word_to_cleanup = '-15:'+word
@@ -58,6 +63,9 @@ Pytest - Unit Tests
 .. code-block:: python
 
     # pytest
+    # there are just two lines of code inside test definition
+    # ACT: launch of the SUT function with mock_file (parameter)
+    # ASSERT: expected (parameter) and returned value of SUT function
     @pytest.mark.parametrize('mock_file, expected', [[
         """hello unit test
 
@@ -105,6 +113,8 @@ Pytest - Unit Tests
 .. code-block:: python
 
     # unittest
+    # ARRANGE step: mocking is inside - need some time to understand what is going on
+    # (of course it might be improved by helper functions)
     def test_mock_read_text_from_file(self):
         mock_file_content = """hello unit test
 
@@ -117,7 +127,6 @@ Pytest - Unit Tests
             _file.assert_called_once_with(fake_file_path, encoding='utf-8')
 
         expected_list_of_words = mock_file_content.split()
-        # expected_list_of_words.append('opened')
         ret_list_of_words = ret.split()
         self.assertListEqual(expected_list_of_words, ret_list_of_words,
                              f'\nExpected words from file: {expected_list_of_words}')
@@ -125,8 +134,8 @@ Pytest - Unit Tests
 
     @patch('count_words.glob.glob', return_value=['path/to/c.txt'])
     def test_mock_get_words_from_txt(self, mock_glob):
-        all_words = ['cell', 'cadmium']
         mock_file_content = 'cell\ncadmium\n'
+        expected = ['cell', 'cadmium']
         file_path = 'path/to/c.txt'
 
         with patch('count_words.open',
@@ -134,4 +143,4 @@ Pytest - Unit Tests
             ret = count_words.get_words_from_txt('l2')
             _file.assert_called_once_with(file_path)
 
-        self.assertCountEqual(all_words, ret, f'\nExpected words from the base: {all_words}')
+        self.assertCountEqual(expected, ret, f'\nExpected words from the base: {expected}')
