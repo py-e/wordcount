@@ -131,9 +131,9 @@ def add_to_counter(w, words_counter, l1, l2):
     words_counter[w][0] += 1
 
 
-def get_words_from_txt(base):
+def get_words_from_txt(base, message_for_empty=None):
     db_txt_files = glob.glob(os.path.join(PATH_TO_BASE, base, '[a-z].txt'))
-    if not db_txt_files:
+    if not db_txt_files and message_for_empty:
         print(f'Base {base} is empty for now')
     list_from_txt = []
     for file in db_txt_files:
@@ -342,7 +342,7 @@ def get_sorted_list_from_base(base, first_letters=''):
         except FileNotFoundError:
             print(f'No words in {base} starting with: {stripped_fl[0]}')
     else:
-        list_from_txt = get_words_from_txt(base)
+        list_from_txt = get_words_from_txt(base, message_for_empty=True)
 
     list_from_txt.sort()
     return list_from_txt
