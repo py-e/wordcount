@@ -53,14 +53,6 @@ def test_write_read_base(base_word):
     assert ret is True
 
 
-@pytest.fixture
-def base_word(tmp_SUT_path, request):
-    base, word_for_test = request.param
-    base_dir = tmp_SUT_path / base
-    base_dir.mkdir()
-    yield base_dir, base, word_for_test
-
-
 ### Fixtures
 
 @pytest.fixture
@@ -77,6 +69,14 @@ def base_files_first_expected(tmp_SUT_path, request):
     if exp is None:
         exp = all_words
     yield base, first, exp
+
+
+@pytest.fixture
+def base_word(tmp_SUT_path, request):
+    base, word_for_test = request.param
+    base_dir = tmp_SUT_path / base
+    base_dir.mkdir()
+    yield base_dir, base, word_for_test
 
 
 ### Utils
