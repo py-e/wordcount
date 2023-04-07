@@ -6,6 +6,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 import count_words
 
 
+# Test cases: write/read functions
+
+
 # text for SUT function: 4, 3, 2 word variants; one word in l2; two not words,
 p_word4 = {'word': 'word', 'variants': ('word', '-&7word', 'word")', 'word")')}
 p_word3 = {'word': 'test', 'variants': ('-=test=-', 'test....', r'\test/')}
@@ -51,6 +54,29 @@ def test_write_read_base(base_word):
     assert word_for_test == file_content(base_dir, word_for_test)
     ret = count_words.word_in_base(base, word_for_test)
     assert ret is True
+
+
+# Test cases: get data from the base (print base)
+
+@pytest.mark.parametrize('create_txt_l1, input_command, expected', [
+((('word',),),                                    'l1',     '1 word'),
+((('word', 'world'), ('sword',)),                 'l1',     '1 sword\n2 word\n3 world'),
+(None,                                            'l1',     'Base l1 is empty for now'),
+((('word', 'world'), ('sword',)),                 'l1:w',   '1 word\n2 world'),
+((('wolf', 'wood', 'wool', 'wrong'), ('sword',)), 'l1:woo', '1 wood\n2 wool'),
+((('word', 'world'), ('sword',)),                 'l1:f',   'No words in l1 starting with: f'),
+((('word', 'world'), ('sword',)),                 'l1:5',   'No words in l1 starting with: 5'),
+((('word', 'world'), ('sword',)),                 'l1:w*',   '"q" - to exit')],
+ids=['1_word', '3_words_2_files', 'empty', '1letter_2from3', '2letters_2from5', '1letter_not_found', 'wrong_symbol', 'wrong_second_symbol'],
+                         indirect=['create_txt_l1', 'input_command'])
+def test_print_base(create_txt_l1, input_command, capsys, expected):
+    """edit_base(); print_base('l1'); get_sorted_list_from_base('l1', ''); get_words_from_txt('l1')"""
+    # GIVEN words added to base @create_txt_l1 AND app in edit mode (start func: edit_base())
+    count_words.edit_base()
+    # WHEN command sent: @input_command
+    # THEN correct data is printed: @expected
+    printed = get_last_lines(capsys.readouterr(), len(expected))
+    assert expected == printed
 
 
 ### Fixtures
@@ -105,9 +131,30 @@ def create_txt(tmp_SUT_path, base, files):
     return all_words, file_paths
 
 
+@pytest.fixture
+def create_txt_l1(tmp_SUT_path, request):
+    if files := request.param:
+        base = 'l1'
+        create_txt(tmp_SUT_path, base, files)
+    yield
+
+
+@pytest.fixture
+def input_command(monkeypatch, request):
+    responses = iter([request.param, 'q'])
+    monkeypatch.setattr('builtins.input', lambda msg: next(responses))
+    yield
+
+
 def file_content(base_dir, word):
     base_file = word[0]+'.txt'
     file_path = os.path.join(base_dir, base_file)
     with open(file_path) as f:
         cont = f.read()
     return cont.replace('\n', '')
+
+
+def get_last_lines(captured, number):
+    text_all = captured.out[:-1]   # remove last new line '\n'
+    text_end = text_all[-number:]
+    return text_end
