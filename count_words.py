@@ -377,7 +377,7 @@ def rem_from_txt(base, word):
                 lines.append(line)
                 if word == line.replace('\n', ''):
                     word_found_in_txt = True
-    except FileNotFoundError:
+    except (FileNotFoundError, OSError):
         # print(f'No words in {base} starting with: {word[0]}')
         pass
 
