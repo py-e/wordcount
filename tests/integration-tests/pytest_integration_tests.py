@@ -83,7 +83,7 @@ ids=['1_word', '3_words_2_files', 'empty', '1letter_2from3', '2letters_2from5', 
                          indirect=['base_files', 'input_command'])
 def test_print_base(base_files, input_command, capsys, expected):
     """edit_base(); print_base('l1'); get_sorted_list_from_base('l1', ''); get_words_from_txt('l1')"""
-    # GIVEN words added to base @create_txt_l1 AND app in edit mode (start func: edit_base())
+    # GIVEN words added to base @base_files AND app in edit mode (start func: edit_base())
     count_words.edit_base()
     # WHEN command sent: @input_command
     # THEN correct data is printed: @expected
@@ -114,7 +114,7 @@ ids=['word_to_empty', 'try_word_from_1000', 'word_file_exist', '5words_3added',
                          indirect=['base_files', 'input_command'])
 def test_add_to_base(tmp_SUT_path, base_files, input_command, capsys, expected_msg, expected_base):
     """edit_base(); add_to_base('l1', 'framework', words=None); write_to_base('l1', 'framework')"""
-    # GIVEN initial state of base in @create_txt_l1 AND app in edit mode (start func: edit_base())
+    # GIVEN initial state of base in @base_files AND app in edit mode (start func: edit_base())
     count_words.edit_base()
     # WHEN command sent: @input_command
     # THEN correct message is printed: @expected_msg
@@ -138,7 +138,7 @@ ids=['1word', '3words_2del', 'try_wrong_symbol', 'try_without_data', 'try_empty_
                          indirect=['base_files', 'input_command'])
 def test_remove_from_base(tmp_SUT_path, base_files, input_command, capsys, expected_msg, expected_base):
     """edit_base(); rem_words('l1', 'framework'); rem_from_txt('l1', 'framework')"""
-    # GIVEN initial state of base in @create_txt_l1 AND app in edit mode (start func: edit_base())
+    # GIVEN initial state of base in @base_files AND app in edit mode (start func: edit_base())
     count_words.edit_base()
     # WHEN command sent: @input_command
     # THEN correct message is printed: @expected_msg
