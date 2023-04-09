@@ -1,0 +1,10 @@
+;indirect;indirect;
+id;base_files;input_command;expected
+1_word;('l1', (('word',),));l1;1 word
+3_words_2_files;('l1', (('word', 'world'), ('sword',)));l1;1 sword\n2 word\n3 world
+empty;('l1', None);l1;Base l1 is empty for now
+1letter_2from3;('l1', (('word', 'world'), ('sword',)));l1:w;1 word\n2 world
+2letters_2from5;('l1', (('wolf', 'wood', 'wool', 'wrong'), ('sword',)));l1:woo;1 wood\n2 wool
+1letter_not_found;('l1', (('word', 'world'), ('sword',)));l1:f;No words in l1 starting with: f
+wrong_symbol;('l1', (('word', 'world'), ('sword',)));l1:5;No words in l1 starting with: 5
+wrong_second_symbol;('l1', (('word', 'world'), ('sword',)));l1:w*;\"q\" - to exit
