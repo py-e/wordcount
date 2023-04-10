@@ -6,9 +6,11 @@ import pytest
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 import count_words
 
+smoke = pytest.mark.smoke
+integration = pytest.mark.integration
+
 
 # Test cases: write/read functions
-
 
 # text for SUT function: 4, 3, 2 word variants; one word in l2; two not words,
 p_word4 = {'word': 'word', 'variants': ('word', '-&7word', 'word")', 'word")')}
@@ -23,6 +25,8 @@ p_files = ([p_word2['word']],)
 p_expected = {p_word3['word']: [3, '(from 100 to 1000)', '', ''],
               p_word4['word']: [4, '(from 100 to 1000)', '', ''],
               p_word2['word']: [2, '(l2)', '', '']}
+@smoke
+@integration
 @pytest.mark.parametrize('text, base_files, expected, not_words', [(p_text, (p_base, p_files), p_expected, p_not_words)],
                     ids=['text432not'],
                     indirect=['base_files'])
@@ -33,6 +37,8 @@ def test_count_words(text, base_files, expected, not_words):
     assert set(not_words) == ret_not_words
 
 
+@smoke
+@integration
 @pytest.mark.parametrize('base_files, first, expected', [
 (('l1', (['hello', 'hi'], ['goodbye'], ['bye'])), None, ['bye', 'goodbye', 'hello', 'hi']),    # for expected: here we can use all_words from base_files, but explicit is better
 (('l1', (['hello', 'hi'], ['goodbye'], ['bye'])), 'he', ['hello']),
@@ -49,6 +55,8 @@ def test_get_sorted_list_from_base(base_files, first, expected):
     assert expected == sorted_words_from_base
 
 
+@smoke
+@integration
 @pytest.mark.parametrize('base, word', [('l1', 'hello')], ids=['l1_h'])
 def test_write_read_base(tmp_SUT_path, base, word):
     """count_words.write_to_base(base, word_for_test); count_words.word_in_base(base, word_for_test)"""
@@ -58,6 +66,8 @@ def test_write_read_base(tmp_SUT_path, base, word):
     assert ret is True
 
 
+@smoke
+@integration
 @pytest.mark.parametrize('base_files, to_rem, expected_base', [
 (('l1', (['hello', 'hi', 'hyphen'],)),          'hi',    ['hello', 'hyphen'])
 ], ids=['1_from_3'], indirect=['base_files'])
@@ -70,6 +80,7 @@ def test_rem_from_txt(tmp_SUT_path, base_files, to_rem, expected_base):
 
 # Test cases: get data from the base (print base)
 
+@integration
 @pytest.mark.parametrize('base_files, input_command, expected', [
 (('l1', (('word',),)),                                    'l1',     '1 word'),
 (('l1', (('word', 'world'), ('sword',))),                 'l1',     '1 sword\n2 word\n3 world'),
@@ -93,6 +104,7 @@ def test_print_base(base_files, input_command, capsys, expected):
 
 # Test cases: add data to the base
 
+@integration
 @pytest.mark.parametrize('base_files, input_command, expected_msg, expected_base',
 [
 (('l1', None),                  'l1 add:framework', ['framework, added to (l1)'],             ['framework']),
@@ -126,6 +138,7 @@ def test_add_to_base(tmp_SUT_path, base_files, input_command, capsys, expected_m
 
 # Test cases: remove data from the base
 
+@integration
 @pytest.mark.parametrize('base_files, input_command, expected_msg, expected_base',
 [
 (('l1', (('framework',),)),                         'l1 rem:framework', 'removed from (l1): framework', []),
