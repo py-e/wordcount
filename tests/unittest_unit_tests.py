@@ -1,6 +1,5 @@
 import sys
 import os
-import shutil
 import unittest
 from unittest.mock import patch, mock_open
 
@@ -407,7 +406,6 @@ class UTMockReadTxt(unittest.TestCase):
             _file.assert_called_once_with(fake_file_path, encoding='utf-8')
 
         expected_list_of_words = mock_file_content.split()
-        # expected_list_of_words.append('opened')
         ret_list_of_words = ret.split()
         self.assertListEqual(expected_list_of_words, ret_list_of_words,
                              f'\nExpected words from file: {expected_list_of_words}')
