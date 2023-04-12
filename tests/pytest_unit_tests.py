@@ -191,3 +191,91 @@ def test_findWordInDataStructureByIndex(index, list_words, to_add, exp):
     """count_words.get_words_by_indexes(indexes_to_add, list_words, words_to_add)"""
     count_words.get_words_by_indexes(index, list_words, to_add)
     assert exp == to_add
+
+
+@pytest.mark.parametrize('mock_file, expected', [[
+    _mock_file := """hello unit test
+
+            and more
+            """,
+    _mock_file.replace('\n', ' ')]],
+                         indirect=['mock_file'],
+                         ids=['file_with_5_words'])
+def test_mock_read_text_from_file(mock_file, expected):
+    """count_words.get_text()"""
+    ret = count_words.get_text(mock_file)
+    assert expected == ret
+
+
+@pytest.mark.parametrize('mock_file, expected', [[
+    _mock_file := 'cell\ncadmium\n',
+    _mock_file.split('\n')[:-1]]],
+                         indirect=['mock_file'],
+                         ids=['file_2_words'])
+def test_mock_get_words_from_txt(mock_glob, mock_file, expected):
+    """count_words.get_words_from_txt()"""
+    base = 'l2'     # actually does not participate in file path creation (fake path is used)
+    ret = count_words.get_words_from_txt(base)
+    assert expected == ret
+
+
+@pytest.mark.parametrize('mock_files, expected', [[
+    _mock_files := (['cell', 'cadmium'], ['velocity']),
+    [word for file in _mock_files for word in file]]],
+                         indirect=['mock_files'],
+                         ids=['3_words_in_2_files'])
+def test_mock_get_words_from_2_txt_files(mock_files, expected):
+    """count_words.get_words_from_txt(base)"""
+    base = 'l2'     # actually does not participate in file path creation (fake path is used)
+    ret = count_words.get_words_from_txt(base)
+
+
+### Fixtures
+
+from unittest.mock import patch, mock_open
+
+FAKE_FILE_PATH = 'some/mock/path'
+
+
+@pytest.fixture
+def mock_file(request):
+    with patch('count_words.open', new=mock_open(read_data=request.param)) as _file:
+        yield FAKE_FILE_PATH
+
+        # Additional check (that the object was called only one time)
+        try:
+            _file.assert_called_once_with(FAKE_FILE_PATH, encoding='utf-8')
+        except AssertionError as e:
+            if 'expected call not found' in str(e) and 'utf-8' in str(e):
+                _file.assert_called_once_with(FAKE_FILE_PATH)
+            else:
+                raise e
+
+
+@pytest.fixture
+def mock_glob():
+    with patch('count_words.glob.glob', return_value=[FAKE_FILE_PATH]) as _file:
+        yield
+
+
+@pytest.fixture
+def mock_files(request):
+    base_dir = os.path.join(count_words.PATH_TO_BASE, 'l_base')
+    input_words = []
+    file_paths = []
+    for file in request.param:
+        file_name = file[0][0] + '.txt'
+        file_path = os.path.join(base_dir, file_name)
+        file_paths.append(file_path)
+        words_in_file = ''
+        for word in file:
+            words_in_file += word+'\n'
+        input_words.append(words_in_file)
+
+    mock_files = [mock_open(read_data=content).return_value for content in input_words]
+    mock_opener = mock_open()
+    mock_opener.side_effect = mock_files
+
+    with patch('count_words.glob.glob', return_value=file_paths):
+        with patch('count_words.open', new=mock_opener) as _file:
+            yield
