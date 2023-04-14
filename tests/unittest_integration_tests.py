@@ -39,7 +39,7 @@ class SetupsIT(unittest.TestCase):
             os.mkdir(path)
 
     @classmethod
-    def setUpClass(cls) -> None:
+    def setUpClass(cls):
         # For test launches: relocate SCRIPT_DIR from root to /tests
         count_words.SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
         count_words.PATH_TO_BASE = os.path.join(count_words.SCRIPT_DIR, 'db', 'txt')

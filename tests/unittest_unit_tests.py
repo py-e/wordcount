@@ -400,8 +400,7 @@ class UTMockReadTxt(unittest.TestCase):
                 and more
                 """
         fake_file_path = 'some/mock/path'
-        with patch('count_words.open',
-                   new=mock_open(read_data=mock_file_content)) as _file:
+        with patch('count_words.open', new=mock_open(read_data=mock_file_content)) as _file:
             ret = count_words.get_text(fake_file_path)
             _file.assert_called_once_with(fake_file_path, encoding='utf-8')
 
@@ -418,16 +417,15 @@ class UTMockReadTxt(unittest.TestCase):
         Check that all words from l2 base returned by the tested function.
         """
         base = 'l2'
-        all_words = ['cell', 'cadmium']
+        expected = ['cell', 'cadmium']
         mock_file_content = 'cell\ncadmium\n'
         file_path = 'path/to/c.txt'
 
-        with patch('count_words.open',
-                   new=mock_open(read_data=mock_file_content)) as _file:
+        with patch('count_words.open', new=mock_open(read_data=mock_file_content)) as _file:
             ret = count_words.get_words_from_txt(base)
             _file.assert_called_once_with(file_path)
 
-        self.assertCountEqual(all_words, ret, f'\nExpected words from the base: {all_words}')
+        self.assertCountEqual(expected, ret, f'\nExpected words from the base: {expected}')
 
     @staticmethod
     # https://gist.github.com/adammartinez271828/137ae25d0b817da2509c1a96ba37fc56
@@ -470,8 +468,7 @@ class UTMockReadTxt(unittest.TestCase):
             input_words.append(words_in_file)
 
         with patch('count_words.glob.glob', return_value=file_paths):
-            with patch('count_words.open',
-                       new=UTMockReadTxt.multi_mock_open(*input_words)) as _file:
+            with patch('count_words.open', new=UTMockReadTxt.multi_mock_open(*input_words)) as _file:
                 ret = count_words.get_words_from_txt(base)
 
         self.assertCountEqual(expected_words, ret, f'\nExpected words from the base: {expected_words}')
