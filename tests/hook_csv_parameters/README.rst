@@ -14,7 +14,7 @@ Hook example - read parameters from csv
 
 To get base_files value right as tuple instead of str, ast module is used.
 
-Custom exception with extended message is provided for case when csv file is not found.
+Custom exception with extended message is provided for the case when a csv file is not found.
 
 
 This hook (local plugin) is created just as an example, of course it makes sense to look at the available plugins (for pytest parameterization in PyPI) first.
