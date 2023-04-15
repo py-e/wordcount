@@ -31,4 +31,4 @@ As context manager:
 
 Integration testing
 -------
-Seems it make sense to leave some write/read tests as integration tests.
+Seems it makes sense to leave some write/read tests as integration tests.
