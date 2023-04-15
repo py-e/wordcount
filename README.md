@@ -1,3 +1,4 @@
+# Results of checking
 ## 3 variants checked:
 - save words in txt files
 - tinydb (lightweight document oriented database, NOSQL, json)
