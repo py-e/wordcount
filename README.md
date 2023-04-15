@@ -8,7 +8,7 @@ And then user can edit received list of words:
 Might be useful for people learning a new language.
 Examples of using:
 - Find unknown words in text and learn these words before reading the whole text.
-- To have base with known words (personal vocabulary) and append new words to this base during learning process.  
+- To have a base with known words (personal vocabulary) and append new words to this base during the learning process.  
 
 
 ### Overview of the program workflow
