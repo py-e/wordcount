@@ -3,7 +3,7 @@ import glob
 import argparse
 from string import ascii_letters
 
-from words_dicts import top_100_english_words, from100_to1000_basic_words
+from dicts.eng_dicts import top_100_english_words, from100_to1000_basic_words
 
 TOP100 = '(in top 100)'
 TOP1000 = '(from 100 to 1000)'
